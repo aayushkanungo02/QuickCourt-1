@@ -17,11 +17,20 @@ const facilitySchema = new mongoose.Schema(
     },
     supportedSports: [{ type: String }],
     amenities: [{ type: String }],
-    photos: { type: String }, // URLs to images
+    photos: {
+      type: [String], // up to 3 URLs
+      validate: [
+        function (arr) {
+          return Array.isArray(arr) && arr.length <= 3;
+        },
+        "At most 3 photos are allowed",
+      ],
+      default: [],
+    },
     status: {
       type: String,
       enum: ["pending", "approved", "rejected"],
-      default: "pending",
+      default: "approved",
     },
   },
   { timestamps: true }

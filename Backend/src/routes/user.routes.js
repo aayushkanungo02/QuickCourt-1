@@ -12,19 +12,15 @@ import {
 
 const router = express.Router();
 
-// Apply protect middleware to all user routes
-router.use(protect);
-
-// Venues
+// Public: Venues
 router.get("/venues", getVenues);
 router.get("/venues/:venueId", getSingleVenue);
 
-// Bookings
+// Protected: Bookings and Profile
+router.use(protect);
 router.post("/bookings", createBooking);
 router.get("/bookings", getMyBookings);
 router.patch("/bookings/:bookingId/cancel", cancelBooking);
-
-// Profile
 router.get("/me", getMyProfile);
 router.patch("/me", updateMyProfile);
 
