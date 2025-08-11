@@ -1,16 +1,19 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import { Button } from "@/components/ui/button"
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Signup from './pages/auth/Signup';
+import Login from './pages/auth/Login';
+import OtpVerification from './pages/auth/OtpVerification';
 
-function App() {
-  const [count, setCount] = useState(0)
-
+const App = () => {
   return (
-    <div className="flex flex-wrap items-center gap-2 md:flex-row">
-      <Button>Button</Button>
-    </div>
-  )
-}
+ 
+      <Routes>
+        <Route path="/" element={<Signup />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/otp-verification" element={<OtpVerification />} />
+      </Routes>
+  
+  );
+};
 
-export default App
+export default App;
