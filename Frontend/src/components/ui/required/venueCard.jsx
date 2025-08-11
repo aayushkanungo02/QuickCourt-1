@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 
 export default function VenueCard({
   id,
@@ -26,9 +27,9 @@ export default function VenueCard({
   }, [images]);
 
   return (
-    <div
-      key={id}
-      className="border rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 bg-white flex flex-col group hover:-translate-y-2 transform"
+    <Link
+      to={`/venue/${id}`}
+      className="block border rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 bg-white flex flex-col group hover:-translate-y-2 transform"
     >
       <div className="h-48 w-full overflow-hidden rounded-t-xl relative">
         {images.map((src, idx) => (
@@ -44,7 +45,9 @@ export default function VenueCard({
       </div>
 
       <div className="p-5 flex flex-col flex-grow">
-        <h3 className="text-xl font-semibold mb-1 text-gray-900">{name}</h3>
+        <h3 className="text-xl font-semibold mb-1 text-gray-900 group-hover:text-green-600 transition-colors">
+          {name}
+        </h3>
         <p className="text-gray-600 mb-1">{location}</p>
         <p className="text-green-700 font-semibold mb-3">{sport}</p>
 
@@ -57,6 +60,6 @@ export default function VenueCard({
           </p>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

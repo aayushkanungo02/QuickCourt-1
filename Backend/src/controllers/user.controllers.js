@@ -120,6 +120,10 @@ export const getVenues = async (req, res) => {
         typeof v.averageRating === "number"
           ? Number(v.averageRating.toFixed(1))
           : 0,
+      photos: v.photos || [],
+      amenities: v.amenities || [],
+      description: v.description || "",
+      fullLocation: v.location || {},
     }));
 
     return res.status(200).json({
@@ -164,7 +168,7 @@ export const getSingleVenue = async (req, res) => {
       name: facility.name,
       description: facility.description,
       address: `${facility.location.address}, ${facility.location.city}`,
-      sports: facility.supportedSports,
+      sportTypes: facility.supportedSports,
       amenities: facility.amenities,
       photos: facility.photos,
       courts,
