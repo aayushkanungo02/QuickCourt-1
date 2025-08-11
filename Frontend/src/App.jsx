@@ -4,6 +4,7 @@ import Signup from './pages/auth/Signup';
 import Login from './pages/auth/Login';
 import OtpVerification from './pages/auth/OtpVerification';
 import UserHomePage from './pages/user/userHomepage';
+import MoreOptions from './pages/user/moreOptions';
 
 const App = () => {
   return (
@@ -13,6 +14,8 @@ const App = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/otp-verification" element={<OtpVerification />} />
         <Route path="/" element={<UserHomePage />} />
+        <Route path="/more-options" element={<MoreOptions />} />
+        
       </Routes>
   
   );
