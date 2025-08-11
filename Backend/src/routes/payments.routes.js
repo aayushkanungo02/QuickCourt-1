@@ -4,6 +4,8 @@ import {
   getQuote,
   createPaymentSession,
   confirmPayment,
+  createStripePaymentIntent,
+  finalizePayment,
 } from "../controllers/payments.controllers.js";
 
 const router = express.Router();
@@ -14,10 +16,14 @@ router.use(protect);
 // Get price quote for a court and time range
 router.get("/quote", getQuote);
 
-// Create a (mock) payment session
-router.post("/session", createPaymentSession);
+// Create a Stripe PaymentIntent
+router.post("/intent", createStripePaymentIntent);
 
-// Confirm payment and create booking
+// Finalize payment (after PI succeeded)
+router.post("/finalize", finalizePayment);
+
+// Legacy mock flows
+router.post("/session", createPaymentSession);
 router.post("/confirm", confirmPayment);
 
 export default router;

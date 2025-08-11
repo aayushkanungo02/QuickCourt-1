@@ -1,12 +1,26 @@
 import mongoose from "mongoose";
+import Stripe from "stripe";
 import { Court } from "../models/courtSchema.js";
 import { Booking } from "../models/bookingschema.js";
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 const toDate = (value) => (value instanceof Date ? value : new Date(value));
 
 const computeDurationHours = (start, end) => {
   const ms = end.getTime() - start.getTime();
   return ms / (1000 * 60 * 60);
+};
+
+const combineDateAndTime = (dateStr, timeStr) => {
+  // Expect dateStr: YYYY-MM-DD, timeStr: HH:mm
+  return new Date(`${dateStr}T${timeStr}:00`);
+};
+
+const findCheapestCourtForSport = async (facilityId, sportType) => {
+  return Court.findOne({ facilityId, sportType })
+    .sort({ pricePerHour: 1 })
+    .exec();
 };
 
 // GET price quote for a court and time range
@@ -58,7 +72,174 @@ export const getQuote = async (req, res) => {
   }
 };
 
-// Create a mock payment session (no external gateway)
+// Create a Stripe PaymentIntent for a facility by sport/date/time/duration
+export const createStripePaymentIntent = async (req, res) => {
+  try {
+    const { facilityId, sportType, date, startTime, durationHours } = req.body;
+    const userId = req.user?._id;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    if (!facilityId || !sportType || !date || !startTime || !durationHours) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "facilityId, sportType, date, startTime and durationHours are required",
+      });
+    }
+
+    if (!mongoose.isValidObjectId(facilityId)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid facilityId" });
+    }
+
+    const court = await findCheapestCourtForSport(facilityId, sportType);
+    if (!court) {
+      return res
+        .status(404)
+        .json({ success: false, message: "No court available for this sport" });
+    }
+
+    const start = combineDateAndTime(date, startTime);
+    const end = new Date(
+      start.getTime() + Number(durationHours) * 60 * 60 * 1000
+    );
+
+    // Overlap check against confirmed bookings
+    const overlapping = await Booking.findOne({
+      courtId: court._id,
+      status: "confirmed",
+      startTime: { $lt: end },
+      endTime: { $gt: start },
+    }).exec();
+    if (overlapping) {
+      return res
+        .status(409)
+        .json({ success: false, message: "Time slot is already booked" });
+    }
+
+    const amountInPaise = Math.round(
+      court.pricePerHour * Number(durationHours) * 100
+    );
+
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amountInPaise,
+      currency: "inr",
+      automatic_payment_methods: { enabled: true },
+      metadata: {
+        userId: String(userId),
+        facilityId: String(facilityId),
+        courtId: String(court._id),
+        sportType,
+        startISO: start.toISOString(),
+        endISO: end.toISOString(),
+      },
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "PaymentIntent created",
+      data: {
+        clientSecret: paymentIntent.client_secret,
+        paymentIntentId: paymentIntent.id,
+        amount: paymentIntent.amount,
+        currency: paymentIntent.currency,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to create payment intent",
+    });
+  }
+};
+
+// Finalize payment by verifying PaymentIntent and creating booking
+export const finalizePayment = async (req, res) => {
+  try {
+    const { paymentIntentId } = req.body;
+    const userId = req.user?._id;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+    if (!paymentIntentId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "paymentIntentId is required" });
+    }
+
+    const pi = await stripe.paymentIntents.retrieve(paymentIntentId);
+    if (!pi || pi.status !== "succeeded") {
+      return res.status(400).json({
+        success: false,
+        message: "Payment is not successful yet",
+        status: pi?.status,
+      });
+    }
+
+    const { facilityId, courtId, startISO, endISO } = pi.metadata || {};
+    if (!facilityId || !courtId || !startISO || !endISO) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing booking metadata in payment intent",
+      });
+    }
+
+    // Ensure no overlap since payment time
+    const start = new Date(startISO);
+    const end = new Date(endISO);
+
+    const overlapping = await Booking.findOne({
+      courtId,
+      status: "confirmed",
+      startTime: { $lt: end },
+      endTime: { $gt: start },
+    }).exec();
+    if (overlapping) {
+      return res.status(409).json({
+        success: false,
+        message: "Time slot has just been booked by someone else",
+      });
+    }
+
+    const court = await Court.findById(courtId).exec();
+    if (!court) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Court not found" });
+    }
+
+    const durationHours = computeDurationHours(start, end);
+    const totalPrice = durationHours * court.pricePerHour;
+
+    const booking = await Booking.create({
+      userId,
+      facilityId,
+      courtId,
+      startTime: start,
+      endTime: end,
+      totalPrice,
+      status: "confirmed",
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Booking created after successful payment",
+      data: { booking },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to finalize payment",
+    });
+  }
+};
+
+// Existing mock endpoints kept for reference/compatibility
 export const createPaymentSession = async (req, res) => {
   try {
     const { courtId, startTime, endTime } = req.body;
@@ -132,7 +313,6 @@ export const createPaymentSession = async (req, res) => {
   }
 };
 
-// Confirm a mock payment and create the booking
 export const confirmPayment = async (req, res) => {
   try {
     const { sessionId, courtId, startTime, endTime, paymentReference } =

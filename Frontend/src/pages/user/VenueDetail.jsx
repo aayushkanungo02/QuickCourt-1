@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "../../lib/axios";
 import { Button } from "../../components/ui/button";
@@ -9,6 +9,7 @@ import { Navbar } from "../../components/ui/required/Navbar";
 export default function VenueDetail() {
   const { id } = useParams();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const navigate = useNavigate();
 
   const {
     data: venue,
@@ -34,6 +35,45 @@ export default function VenueDetail() {
     sunday: { open: "06:00", close: "22:00" },
   };
 
+  // Sport icons mapping
+  const getSportIcon = (sport) => {
+    const sportIcons = {
+      Football: (
+        <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10S2 17.514 2 12 6.486 2 12 2zm0 2c-4.411 0-8 3.589-8 8s3.589 8 8 8 8-3.589 8-8-3.589-8-8-8zm0 1c1.018 0 1.985.217 2.858.608l-1.986 3.441L12 8.5l-.872.549L9.142 5.608C10.015 4.217 10.982 4 12 4z" />
+        </svg>
+      ),
+      Basketball: (
+        <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10S2 17.514 2 12 6.486 2 12 2zm0 2c-4.411 0-8 3.589-8 8s3.589 8 8 8 8-3.589 8-8-3.589-8-8-8zm0 1c1.306 0 2.518.347 3.57.953L12 8.83 8.43 5.953C9.482 4.347 10.694 4 12 4z" />
+        </svg>
+      ),
+      Cricket: (
+        <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M15.04 3.87c-.1-.1-.26-.1-.36 0L12 6.55 9.32 3.87c-.1-.1-.26-.1-.36 0-.1.1-.1.26 0 .36L11.64 7l-2.68 2.77c-.1.1-.1.26 0 .36.1.1.26.1.36 0L12 7.45l2.68 2.68c.1.1.26.1.36 0 .1-.1.1-.26 0-.36L12.36 7l2.68-2.77c.1-.1.1-.26 0-.36z" />
+        </svg>
+      ),
+      Tennis: (
+        <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8 0-1.85.63-3.55 1.69-4.9L16.9 18.31C15.55 19.37 13.85 20 12 20zm6.31-3.1L7.1 5.69C8.45 4.63 10.15 4 12 4c4.42 0 8 3.58 8 8 0 1.85-.63 3.55-1.69 4.9z" />
+        </svg>
+      ),
+      Badminton: (
+        <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M6.8 2.1L5.4 3.5l3.6 3.6c-.4.7-.6 1.5-.6 2.4 0 2.8 2.2 5 5 5s5-2.2 5-5-2.2-5-5-5c-.9 0-1.7.2-2.4.6L6.8 2.1zm6.6 4.4c1.7 0 3 1.3 3 3s-1.3 3-3 3-3-1.3-3-3 1.3-3 3-3z" />
+        </svg>
+      ),
+    };
+
+    return (
+      sportIcons[sport] || (
+        <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+        </svg>
+      )
+    );
+  };
+
   const formatTime = (time) => {
     return new Date(`2000-01-01T${time}`).toLocaleTimeString("en-US", {
       hour: "numeric",
@@ -44,13 +84,35 @@ export default function VenueDetail() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50">
         <Navbar />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
           <div className="animate-pulse">
-            <div className="h-96 bg-gray-200 rounded-xl mb-8"></div>
-            <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
+            {/* Header skeleton */}
+            <div className="bg-white/80 backdrop-blur-sm shadow-lg border border-gray-100 rounded-xl p-4 mb-8">
+              <div className="h-6 bg-gradient-to-r from-green-200 to-emerald-200 rounded-lg w-32"></div>
+            </div>
+
+            {/* Main content skeleton */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2">
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+                  <div className="h-96 bg-gradient-to-r from-gray-200 to-green-100 rounded-t-2xl"></div>
+                </div>
+              </div>
+              <div className="space-y-6">
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-100">
+                  <div className="h-12 bg-gradient-to-r from-green-200 to-emerald-200 rounded-xl"></div>
+                </div>
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-100">
+                  <div className="h-6 bg-gradient-to-r from-gray-200 to-green-100 rounded-lg mb-4 w-24"></div>
+                  <div className="space-y-2">
+                    <div className="h-4 bg-gradient-to-r from-gray-200 to-green-100 rounded w-full"></div>
+                    <div className="h-4 bg-gradient-to-r from-gray-200 to-green-100 rounded w-3/4"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -59,21 +121,50 @@ export default function VenueDetail() {
 
   if (isError || !venue) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50">
         <Navbar />
         <div className="flex items-center justify-center min-h-[calc(100vh-80px)]">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+          <div className="text-center bg-white/90 backdrop-blur-sm p-10 rounded-2xl shadow-2xl border border-gray-100">
+            <div className="w-20 h-20 bg-gradient-to-r from-red-400 to-pink-400 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg
+                className="w-10 h-10 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                />
+              </svg>
+            </div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
               Venue Not Found
             </h2>
-            <p className="text-gray-600 mb-6">
-              The venue you're looking for doesn't exist.
+            <p className="text-gray-600 mb-8 text-lg">
+              The venue you're looking for doesn't exist or may have been
+              removed.
             </p>
             <Link
               to="/"
-              className="text-green-600 hover:text-green-700 font-medium"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
             >
-              ← Back to Home
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                />
+              </svg>
+              Back to Home
             </Link>
           </div>
         </div>
@@ -82,27 +173,67 @@ export default function VenueDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50">
       <Navbar />
 
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
-          <Link
-            to="/"
-            className="text-green-600 hover:text-green-700 font-medium"
-          >
-            ← Back to Venues
-          </Link>
+      <div className="bg-white/80 backdrop-blur-sm shadow-lg border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+          <div className="flex items-center justify-between">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 text-green-600 hover:text-green-700 font-semibold text-lg hover:bg-green-50 px-3 py-2 rounded-lg transition-all duration-200"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                />
+              </svg>
+              Back to Venues
+            </Link>
+
+            {/* Venue title and rating */}
+            <div className="text-right">
+              <h1 className="text-2xl font-bold text-gray-900 mb-1">
+                {venue.name}
+              </h1>
+              <div className="flex items-center justify-end gap-2">
+                <div className="flex items-center gap-1 bg-yellow-50 px-3 py-1 rounded-lg border border-yellow-200">
+                  <svg
+                    className="w-4 h-4 text-yellow-500"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                  </svg>
+                  <span className="text-yellow-700 font-semibold">
+                    {venue.rating || "4.5"}
+                  </span>
+                </div>
+                <span className="text-2xl font-bold text-green-700">
+                  ₹{venue.startingPrice || 0}
+                  <span className="text-sm font-normal text-gray-600">/hr</span>
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Image Gallery */}
+          {/* Left Column - Image Gallery (keeping as is) */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden border border-gray-100">
               {images.length > 0 ? (
                 <div className="relative">
                   <div className="aspect-[4/3] overflow-hidden">
@@ -120,9 +251,9 @@ export default function VenueDetail() {
                         <button
                           key={index}
                           onClick={() => setCurrentImageIndex(index)}
-                          className={`w-3 h-3 rounded-full transition-colors ${
+                          className={`w-3 h-3 rounded-full transition-all duration-200 ${
                             index === currentImageIndex
-                              ? "bg-white"
+                              ? "bg-white shadow-lg scale-125"
                               : "bg-white/50 hover:bg-white/75"
                           }`}
                         />
@@ -131,8 +262,23 @@ export default function VenueDetail() {
                   )}
                 </div>
               ) : (
-                <div className="aspect-[4/3] bg-gray-200 flex items-center justify-center">
-                  <p className="text-gray-500">No images available</p>
+                <div className="aspect-[4/3] bg-gradient-to-r from-gray-100 to-green-50 flex items-center justify-center">
+                  <div className="text-center">
+                    <svg
+                      className="w-16 h-16 text-gray-400 mx-auto mb-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                    <p className="text-gray-500 text-lg">No images available</p>
+                  </div>
                 </div>
               )}
             </div>
@@ -141,32 +287,74 @@ export default function VenueDetail() {
           {/* Right Column - Booking & Info */}
           <div className="space-y-6">
             {/* Book This Venue Button */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <Button className="w-full bg-green-600 hover:bg-green-700 text-white py-3 text-lg font-semibold">
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-100">
+              <Button
+                onClick={() => navigate(`/venue/${id}/book`)}
+                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white py-4 text-lg font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+              >
                 Book This Venue
               </Button>
             </div>
 
             {/* Address */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-100">
+              <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <svg
+                  className="w-5 h-5 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
                 Address
               </h3>
-              <div className="space-y-2 text-gray-600">
-                <p>{venue.address}</p>
+              <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                <p className="text-gray-700 font-medium leading-relaxed">
+                  {venue.address}
+                </p>
               </div>
             </div>
 
             {/* Operating Hours */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-100">
+              <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <svg
+                  className="w-5 h-5 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
                 Operating Hours
               </h3>
-              <div className="space-y-2">
+              <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-3">
                 {Object.entries(operatingHours).map(([day, hours]) => (
-                  <div key={day} className="flex justify-between items-center">
-                    <span className="text-gray-600 capitalize">{day}</span>
-                    <span className="text-gray-900 font-medium">
+                  <div
+                    key={day}
+                    className="flex justify-between items-center py-1"
+                  >
+                    <span className="text-gray-700 capitalize font-medium">
+                      {day}
+                    </span>
+                    <span className="text-gray-900 font-semibold bg-white px-3 py-1 rounded-lg shadow-sm">
                       {formatTime(hours.open)} - {formatTime(hours.close)}
                     </span>
                   </div>
@@ -176,60 +364,167 @@ export default function VenueDetail() {
           </div>
         </div>
 
-        {/* Sports Available Section */}
-        <div className="mt-12">
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+        {/* Continuous Professional Sections without shadows */}
+        <div className="mt-12 bg-white/70 backdrop-blur-sm border border-gray-200 rounded-3xl overflow-hidden">
+          {/* Sports Available Section */}
+          <div className="p-10 border-b border-gray-200">
+            <h2 className="text-3xl font-bold text-gray-900 mb-10 flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center">
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"
+                  />
+                </svg>
+              </div>
               Sports Available
             </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
               {venue.sportTypes?.map((sport, index) => (
                 <div
                   key={index}
-                  className="bg-green-50 border border-green-200 rounded-lg p-4 text-center hover:bg-green-100 transition-colors"
+                  className="group relative bg-white border-2 border-gray-200 rounded-2xl p-6 text-center cursor-pointer transform transition-all duration-300 hover:scale-110 hover:border-green-400 hover:-translate-y-2 hover:shadow-2xl hover:shadow-green-200/50"
                 >
-                  <div className="text-green-600 font-semibold">{sport}</div>
+                  <div className="relative z-10">
+                    <div className="text-green-600 group-hover:text-green-700 transition-colors duration-300 mb-4 flex justify-center">
+                      {getSportIcon(sport)}
+                    </div>
+                    <div className="text-gray-800 group-hover:text-gray-900 font-bold text-lg transition-colors duration-300">
+                      {sport}
+                    </div>
+                  </div>
+
+                  {/* Hover background effect */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                  {/* Floating effect indicator */}
+                  <div className="absolute -inset-1 bg-gradient-to-r from-green-400 to-emerald-400 rounded-2xl opacity-0 group-hover:opacity-20 blur-lg transition-all duration-300"></div>
                 </div>
               )) || (
-                <div className="col-span-full text-center text-gray-500 py-8">
-                  No sports information available
+                <div className="col-span-full text-center py-16">
+                  <svg
+                    className="w-20 h-20 text-gray-300 mx-auto mb-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.29-1.009-5.674-2.64"
+                    />
+                  </svg>
+                  <p className="text-gray-400 text-xl font-medium">
+                    No sports information available
+                  </p>
                 </div>
               )}
             </div>
           </div>
-        </div>
 
-        {/* Amenities Section */}
-        <div className="mt-8">
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Amenities</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          {/* Amenities Section - Different Style */}
+          <div className="p-10 border-b border-gray-200 bg-gradient-to-r from-blue-25 to-indigo-25">
+            <h2 className="text-3xl font-bold text-gray-900 mb-10 flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center">
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                  />
+                </svg>
+              </div>
+              Premium Amenities
+            </h2>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {venue.amenities?.map((amenity, index) => (
                 <div
                   key={index}
-                  className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center hover:bg-blue-100 transition-colors"
+                  className="flex items-center gap-4 bg-white/80 backdrop-blur-sm border border-blue-200 rounded-xl p-4 hover:bg-white hover:border-blue-300 transition-all duration-200 hover:scale-105"
                 >
-                  <div className="text-blue-600 font-semibold">{amenity}</div>
+                  <div className="w-12 h-12 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <svg
+                      className="w-6 h-6 text-blue-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  </div>
+                  <div className="text-gray-800 font-semibold text-base">
+                    {amenity}
+                  </div>
                 </div>
               )) || (
-                <div className="col-span-full text-center text-gray-500 py-8">
-                  No amenities information available
+                <div className="col-span-full text-center py-16">
+                  <svg
+                    className="w-20 h-20 text-gray-300 mx-auto mb-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.29-1.009-5.674-2.64"
+                    />
+                  </svg>
+                  <p className="text-gray-400 text-xl font-medium">
+                    No amenities information available
+                  </p>
                 </div>
               )}
             </div>
           </div>
-        </div>
 
-        {/* About Venue Section */}
-        <div className="mt-8">
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+          {/* About Venue Section - Clean minimal style */}
+          <div className="p-10 bg-gradient-to-r from-purple-25 to-pink-25">
+            <h2 className="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
               About This Venue
             </h2>
-            <div className="prose max-w-none">
-              <p className="text-gray-700 leading-relaxed text-lg">
+
+            <div className="max-w-4xl">
+              <p className="text-gray-700 leading-relaxed text-lg font-medium bg-white/50 backdrop-blur-sm border border-purple-100 rounded-2xl p-8">
                 {venue.description ||
-                  "No description available for this venue."}
+                  "This venue offers premium facilities for sports and recreational activities. Our state-of-the-art equipment and professional-grade courts provide the perfect environment for both casual games and competitive training sessions. Whether you're looking to improve your skills or just have fun with friends, our venue delivers an exceptional experience with top-notch amenities and flexible booking options."}
               </p>
             </div>
           </div>
