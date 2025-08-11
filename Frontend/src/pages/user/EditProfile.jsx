@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Navbar } from "../../components/ui/required/Navbar";
 import { axiosInstance } from "../../lib/axios";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ const EditProfile = () => {
   });
   const [bookings, setBookings] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [streak, setStreak] = useState({ current: 0, longest: 0 });
 
   const { authUser } = useAuthUser();
 
@@ -47,6 +48,42 @@ const EditProfile = () => {
       console.error(err);
     }
   };
+
+  useEffect(() => {
+    // compute streaks by consecutive calendar days with any booking
+    if (!bookings || bookings.length === 0) {
+      setStreak({ current: 0, longest: 0 });
+      return;
+    }
+    const days = Array.from(
+      new Set(
+        bookings.map((b) => {
+          // booking.date is YYYY-MM-DD per controller
+          return b.date;
+        })
+      )
+    )
+      .map((d) => new Date(d + "T00:00:00"))
+      .sort((a, b) => a - b);
+
+    let current = 1;
+    let longest = 1;
+    for (let i = 1; i < days.length; i++) {
+      const diff = (days[i] - days[i - 1]) / (1000 * 60 * 60 * 24);
+      if (diff === 1) {
+        current += 1;
+        longest = Math.max(longest, current);
+      } else if (diff > 1) {
+        current = 1;
+      }
+    }
+
+    // If last day is today, keep as is; else current resets to 0
+    const today = new Date();
+    const last = days[days.length - 1];
+    const sameDay = last.toDateString() === new Date(today.toISOString().slice(0, 10)).toDateString();
+    setStreak({ current: sameDay ? current : 0, longest });
+  }, [bookings]);
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
@@ -163,6 +200,24 @@ const EditProfile = () => {
               {uploading && (
                 <p className="text-xs text-gray-500 mt-1">Uploading...</p>
               )}
+
+              {/* Streak widget */}
+              <div className="mt-6 w-full bg-white rounded-xl border border-green-200 p-4">
+                <div className="text-sm font-semibold text-green-900 flex items-center gap-2">
+                  <span>🔥 Streaks</span>
+                </div>
+                <div className="mt-2 grid grid-cols-2 gap-2 text-center">
+                  <div className="bg-green-50 rounded-lg p-3">
+                    <div className="text-2xl font-bold text-green-700">{streak.current}</div>
+                    <div className="text-xs text-green-800">Current</div>
+                  </div>
+                  <div className="bg-emerald-50 rounded-lg p-3">
+                    <div className="text-2xl font-bold text-emerald-700">{streak.longest}</div>
+                    <div className="text-xs text-emerald-800">Longest</div>
+                  </div>
+                </div>
+                <div className="mt-3 text-xs text-gray-600">Book daily to grow your streak and earn badges.</div>
+              </div>
             </>
           )}
 
