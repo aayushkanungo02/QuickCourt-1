@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { axiosInstance } from "../lib/axios";
-import { Button } from "../components/ui/button";
-import { Separator } from "../components/ui/separator";
-import { Navbar } from "../components/ui/required/Navbar";
+import { axiosInstance } from "../../lib/axios";
+import { Button } from "../../components/ui/button";
+import { Separator } from "../../components/ui/separator";
+import { Navbar } from "../../components/ui/required/Navbar";
 
 export default function VenueDetail() {
   const { id } = useParams();
