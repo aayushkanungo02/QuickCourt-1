@@ -23,11 +23,16 @@ export default function OtpVerification() {
   const { mutate: verifyMutate, isPending } = useMutation({
     mutationFn: async () =>
       axiosInstance.post("/auth/verify-otp", { email, otp }),
-    onSuccess: () => {
+    onSuccess: (res) => {
       try {
         sessionStorage.removeItem("pendingEmail");
       } catch {}
-      navigate("/");
+      const role = res?.data?.user?.role;
+      if (role === "Facility Owner") {
+        navigate("/owner");
+      } else {
+        navigate("/");
+      }
     },
     onError: (err) => {
       console.error(err?.response?.data || err?.message);

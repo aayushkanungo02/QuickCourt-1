@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Signup from "./pages/auth/Signup";
 import Login from "./pages/auth/Login";
 import OtpVerification from "./pages/auth/OtpVerification";
@@ -10,11 +10,15 @@ import CourtBooking from "./pages/user/CourtBooking";
 import Payment from "./pages/user/Payment";
 import useAuthUser from "./hooks/useAuthuser";
 import EditProfile from "./pages/user/EditProfile";
+import OwnerLayout from "./pages/owner/OwnerLayout";
+import OwnerDashboard from "./pages/owner/OwnerDashboard";
+import Facilities from "./pages/owner/Facilities";
+import ManageCourts from "./pages/owner/ManageCourts";
 
 const App = () => {
   const { isLoading, authUser } = useAuthUser();
   if (isLoading) return <div>Loading...</div>;
-  
+
   const isAuthenticated = Boolean(authUser);
 
   return (
@@ -28,6 +32,13 @@ const App = () => {
       <Route path="/venue/:id/book" element={<CourtBooking />} />
       <Route path="/payment/:id" element={<Payment />} />
       <Route path="/edit-profile" element={<EditProfile />} />
+
+      {/* Facility Owner area */}
+      <Route path="/owner" element={<OwnerLayout />}>
+        <Route index element={<OwnerDashboard />} />
+        <Route path="facilities" element={<Facilities />} />
+        <Route path="manage-courts" element={<ManageCourts />} />
+      </Route>
     </Routes>
   );
 };
