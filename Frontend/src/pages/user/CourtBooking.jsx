@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "../../lib/axios";
 import { Button } from "../../components/ui/button";
-import { Navbar } from "../../components/ui/required/Navbar";
+import Navbar from "../../components/ui/required/Navbar";
 
 export default function CourtBooking() {
   const { id } = useParams();
