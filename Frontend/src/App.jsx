@@ -5,6 +5,7 @@ import Login from './pages/auth/Login';
 import OtpVerification from './pages/auth/OtpVerification';
 import UserHomePage from './pages/user/userHomepage';
 import MoreOptions from './pages/user/moreOptions';
+import VenueDetails from './pages/user/VenueDetails';
 
 const App = () => {
   return (
@@ -15,6 +16,8 @@ const App = () => {
         <Route path="/otp-verification" element={<OtpVerification />} />
         <Route path="/" element={<UserHomePage />} />
         <Route path="/more-options" element={<MoreOptions />} />
+        <Route path="/venue/:id" element={<VenueDetails />} />
+
         
       </Routes>
   
