@@ -2,10 +2,11 @@ import { Link } from "react-router-dom";
 import { CalendarDays, LogOut } from "lucide-react";
 import useAuthUser from "../../../hooks/useAuthuser";
 import { axiosInstance } from "../../../lib/axios";
-
+import { useNavigate } from "react-router-dom";
 export function Navbar() {
   const { authUser } = useAuthUser();
   const isAuthenticated = Boolean(authUser);
+  const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
@@ -22,11 +23,11 @@ export function Navbar() {
       <div className="text-2xl font-bold text-green-600">QuickCourt</div>
 
       <Link
-        to="/booking"
+        to="/edit-profile?tab=bookings"
         className="flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-md hover:bg-green-200 hover:text-green-800 font-medium transition"
       >
         <CalendarDays size={20} />
-        Booking
+        Bookings
       </Link>
 
       <div className="flex items-center gap-4">

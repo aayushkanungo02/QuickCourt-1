@@ -24,6 +24,7 @@ function PaymentForm() {
   const { state } = useLocation();
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const bookingDetails = state?.bookingDetails;
   const venue = state?.venue;
@@ -77,7 +78,7 @@ function PaymentForm() {
           { withCredentials: true }
         );
 
-        navigate(`/venue/${id}`, { replace: true });
+        setIsSuccess(true);
       } else {
         setErrorMessage("Payment not completed");
       }
@@ -96,10 +97,12 @@ function PaymentForm() {
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-green-700 to-emerald-600 bg-clip-text text-transparent mb-2">
-            Secure Payment
+            {isSuccess ? "Payment Successful" : "Secure Payment"}
           </h1>
           <p className="text-green-600 font-medium">
-            Complete your booking with Stripe
+            {isSuccess
+              ? "Your booking has been confirmed."
+              : "Complete your booking with Stripe"}
           </p>
         </div>
 
@@ -138,34 +141,48 @@ function PaymentForm() {
           </div>
         </div>
 
-        {/* Card form */}
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-green-100 p-6 space-y-6"
-        >
-          <div>
-            <label className="block text-lg font-semibold text-green-800 mb-3">
-              Card details
-            </label>
-            <div className="border-2 border-green-200 rounded-xl p-3 bg-white">
-              <CardElement options={{ hidePostalCode: true }} />
+        {/* Success state or Card form */}
+        {isSuccess ? (
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-green-100 p-6 space-y-6 text-center">
+            <div className="text-green-700 text-lg font-semibold">
+              Payment successful! Your booking has been created.
             </div>
+            <Button
+              onClick={() => navigate(`/edit-profile?tab=bookings`)}
+              className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white py-4 text-lg font-bold rounded-xl shadow-lg hover:shadow-xl"
+            >
+              View Bookings
+            </Button>
           </div>
-
-          {errorMessage && (
-            <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
-              {errorMessage}
-            </div>
-          )}
-
-          <Button
-            type="submit"
-            disabled={isLoading || !stripe || !elements}
-            className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white py-4 text-lg font-bold rounded-xl shadow-lg hover:shadow-xl disabled:opacity-50"
+        ) : (
+          <form
+            onSubmit={handleSubmit}
+            className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-green-100 p-6 space-y-6"
           >
-            {isLoading ? "Processing..." : `Pay ₹${amountDisplay}`}
-          </Button>
-        </form>
+            <div>
+              <label className="block text-lg font-semibold text-green-800 mb-3">
+                Card details
+              </label>
+              <div className="border-2 border-green-200 rounded-xl p-3 bg-white">
+                <CardElement options={{ hidePostalCode: true }} />
+              </div>
+            </div>
+
+            {errorMessage && (
+              <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+                {errorMessage}
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              disabled={isLoading || !stripe || !elements}
+              className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white py-4 text-lg font-bold rounded-xl shadow-lg hover:shadow-xl disabled:opacity-50"
+            >
+              {isLoading ? "Processing..." : `Pay ₹${amountDisplay}`}
+            </Button>
+          </form>
+        )}
       </div>
     </div>
   );
