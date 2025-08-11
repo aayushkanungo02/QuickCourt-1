@@ -18,8 +18,13 @@ export default function Login() {
 
   const { mutate: loginMutate, isPending } = useMutation({
     mutationFn: async () => axiosInstance.post("/auth/login", form),
-    onSuccess: () => {
-      navigate("/");
+    onSuccess: (res) => {
+      const role = res?.data?.user?.role;
+      if (role === "Facility Owner") {
+        navigate("/owner");
+      } else {
+        navigate("/");
+      }
     },
     onError: (err) => {
       const message = err?.response?.data?.message || "Login failed";
@@ -93,7 +98,10 @@ export default function Login() {
 
           <p className="text-center text-sm text-gray-600 mt-4">
             Don&apos;t have an account?{" "}
-            <Link to="/signup" className="text-blue-600 hover:underline font-medium">
+            <Link
+              to="/signup"
+              className="text-blue-600 hover:underline font-medium"
+            >
               Sign Up
             </Link>
           </p>
