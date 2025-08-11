@@ -1,5 +1,5 @@
 import React from 'react'
-import Navbar from '../../components/ui/required/Navbar'
+import { Navbar } from '../../components/ui/required/Navbar'
 
 const EditProfile = () => {
   return (
