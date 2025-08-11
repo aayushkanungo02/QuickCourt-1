@@ -234,4 +234,180 @@ router.get("/owner/dashboard", async (req, res) => {
   }
 });
 
+// Owner: Courts CRUD operations
+router.get("/owner/courts", async (req, res) => {
+  try {
+    const { Court } = await import("../models/courtSchema.js");
+    const { facilityId, facilityIds } = req.query;
+
+    let query = {};
+    
+    if (facilityId && facilityId !== "all") {
+      // Get courts for a specific facility
+      query.facilityId = facilityId;
+    } else if (facilityIds) {
+      // Get courts for multiple facilities (comma-separated IDs)
+      const ids = facilityIds.split(",").filter(Boolean);
+      if (ids.length > 0) {
+        query.facilityId = { $in: ids };
+      }
+    }
+
+    // If no specific facility filter, get all courts for facilities owned by the user
+    if (Object.keys(query).length === 0) {
+      const { Facility } = await import("../models/facilitySchema.js");
+      const facilities = await Facility.find({ ownerId: req.user._id }).exec();
+      const facilityIds = facilities.map(f => f._id);
+      if (facilityIds.length > 0) {
+        query.facilityId = { $in: facilityIds };
+      }
+    }
+
+    const courts = await Court.find(query)
+      .populate("facilityId", "name")
+      .sort({ createdAt: -1 })
+      .exec();
+
+    return res.json({
+      success: true,
+      data: courts
+    });
+  } catch (e) {
+    return res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+router.post("/owner/courts", async (req, res) => {
+  try {
+    const { Court } = await import("../models/courtSchema.js");
+    const { Facility } = await import("../models/facilitySchema.js");
+    
+    const { facilityId, name, sportType, pricePerHour, operatingHours } = req.body;
+
+    // Validate required fields
+    if (!facilityId || !name || !sportType || !pricePerHour || !operatingHours) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required"
+      });
+    }
+
+    // Verify that the facility belongs to the current user
+    const facility = await Facility.findOne({ 
+      _id: facilityId, 
+      ownerId: req.user._id 
+    }).exec();
+
+    if (!facility) {
+      return res.status(403).json({
+        success: false,
+        message: "Facility not found or access denied"
+      });
+    }
+
+    // Create the court
+    const court = await Court.create({
+      facilityId,
+      name: name.trim(),
+      sportType: sportType.trim(),
+      pricePerHour: Number(pricePerHour),
+      operatingHours: {
+        start: operatingHours.start,
+        end: operatingHours.end
+      }
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Court added successfully",
+      data: court
+    });
+  } catch (e) {
+    return res.status(400).json({ success: false, message: e.message });
+  }
+});
+
+router.put("/owner/courts/:id", async (req, res) => {
+  try {
+    const { Court } = await import("../models/courtSchema.js");
+    const { id } = req.params;
+    const { name, sportType, pricePerHour, operatingHours } = req.body;
+
+    // Validate required fields
+    if (!name || !sportType || !pricePerHour || !operatingHours) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required"
+      });
+    }
+
+    // Find and update the court, ensuring it belongs to a facility owned by the current user
+    const court = await Court.findOneAndUpdate(
+      { 
+        _id: id,
+        facilityId: { $in: await getFacilityIdsForUser(req.user._id) }
+      },
+      {
+        name: name.trim(),
+        sportType: sportType.trim(),
+        pricePerHour: Number(pricePerHour),
+        operatingHours: {
+          start: operatingHours.start,
+          end: operatingHours.end
+        }
+      },
+      { new: true }
+    ).exec();
+
+    if (!court) {
+      return res.status(404).json({
+        success: false,
+        message: "Court not found or access denied"
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Court updated successfully",
+      data: court
+    });
+  } catch (e) {
+    return res.status(400).json({ success: false, message: e.message });
+  }
+});
+
+router.delete("/owner/courts/:id", async (req, res) => {
+  try {
+    const { Court } = await import("../models/courtSchema.js");
+    const { id } = req.params;
+
+    // Find and delete the court, ensuring it belongs to a facility owned by the current user
+    const court = await Court.findOneAndDelete({
+      _id: id,
+      facilityId: { $in: await getFacilityIdsForUser(req.user._id) }
+    }).exec();
+
+    if (!court) {
+      return res.status(404).json({
+        success: false,
+        message: "Court not found or access denied"
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Court deleted successfully"
+    });
+  } catch (e) {
+    return res.status(400).json({ success: false, message: e.message });
+  }
+});
+
+// Helper function to get facility IDs for a user
+async function getFacilityIdsForUser(userId) {
+  const { Facility } = await import("../models/facilitySchema.js");
+  const facilities = await Facility.find({ ownerId: userId }).exec();
+  return facilities.map(f => f._id);
+}
+
 export default router;
