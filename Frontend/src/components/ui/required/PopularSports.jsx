@@ -1,24 +1,55 @@
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { axiosInstance } from "../../../lib/axios";
+import { useNavigate } from "react-router-dom";
 
 const popularSports = [
-  { id: 1, name: "Badminton", img: "/bat.jpg" },
-  { id: 2, name: "Football", img: "/football.jpg" },
-  { id: 3, name: "Tennis", img: "/tt.jpg" },
-  { id: 3, name: "Tennis", img: "/tt.jpg" },
-  { id: 3, name: "Tennis", img: "/tt.jpg" },
-  { id: 3, name: "Tennis", img: "/tt.jpg" },
-  { id: 3, name: "Tennis", img: "/tt.jpg" },
-  { id: 3, name: "Tennis", img: "/tt.jpg" },
-  // Add more sports as needed
+  { id: "badminton", name: "Badminton", img: "/batminton.webp" },
+  { id: "football", name: "Football", img: "/football.jpg" },
+  { id: "tennis", name: "Tennis", img: "/tt.jpg" },
+  { id: "badminton2", name: "Badminton", img: "/1.webp" },
+  {
+    id: "archery",
+    name: "Archery",
+    img: "https://www.shutterstock.com/image-photo/six-arows-on-archery-target-600nw-2513626239.jpg"
+  },
 ];
 
 export function PopularSports() {
   const scrollRef = useRef(null);
+  const navigate = useNavigate();
+  const [topVenuesBySport, setTopVenuesBySport] = useState({});
+
+  useEffect(() => {
+    const controller = new AbortController();
+    (async () => {
+      try {
+        const promises = popularSports.map((s) =>
+          axiosInstance.get(`/users/venues`, {
+            params: { sport: s.name, limit: 5 },
+            signal: controller.signal,
+          })
+        );
+        const results = await Promise.allSettled(promises);
+        const map = {};
+        results.forEach((res, idx) => {
+          const key = popularSports[idx].id;
+          if (res.status === "fulfilled") {
+            map[key] = res.value?.data?.data?.venues || [];
+          } else {
+            map[key] = [];
+          }
+        });
+        setTopVenuesBySport(map);
+      } catch (_) {}
+    })();
+    return () => controller.abort();
+  }, []);
 
   const scrollByCard = (direction) => {
     if (scrollRef.current) {
-      const cardWidth = scrollRef.current.firstChild.offsetWidth + 24; // card width + gap
+      const firstChild = scrollRef.current.firstChild;
+      const cardWidth = (firstChild?.offsetWidth || 240) + 24;
       scrollRef.current.scrollBy({
         left: direction === "left" ? -cardWidth : cardWidth,
         behavior: "smooth",
@@ -32,7 +63,6 @@ export function PopularSports() {
         Popular Sports
       </h2>
 
-      {/* Left Arrow */}
       <button
         aria-label="Scroll Left"
         onClick={() => scrollByCard("left")}
@@ -41,7 +71,6 @@ export function PopularSports() {
         <ChevronLeft size={24} />
       </button>
 
-      {/* Right Arrow */}
       <button
         aria-label="Scroll Right"
         onClick={() => scrollByCard("right")}
@@ -55,21 +84,44 @@ export function PopularSports() {
         className="flex overflow-x-auto space-x-6 sm:space-x-8 pb-4 scrollbar-thin scrollbar-thumb-green-400 scrollbar-track-green-100 scroll-smooth"
         style={{ scrollSnapType: "x mandatory" }}
       >
-        {popularSports.map(({ id, name, img }) => (
-          <div
-            key={id}
-            className="flex-shrink-0 snap-center flex flex-col items-center bg-green-50 border border-green-300 rounded-2xl p-6 shadow-md hover:shadow-lg transition w-40 sm:w-52 md:w-56"
-          >
-            <img
-              src={img}
-              alt={name}
-              className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 object-cover rounded-lg mb-5"
-            />
-            <p className="text-green-900 font-semibold text-lg sm:text-xl text-center">
-              {name}
-            </p>
-          </div>
-        ))}
+        {popularSports.map(({ id, name, img }) => {
+          const venues = topVenuesBySport[id] || [];
+          return (
+            <div
+              key={id}
+              className="flex-shrink-0 snap-center bg-white border border-green-200 rounded-2xl p-5 shadow-md hover:shadow-lg transition w-64 sm:w-72"
+            >
+              <div
+                className="cursor-pointer"
+                onClick={() => navigate(`/more-options?sport=${encodeURIComponent(name)}`)}
+              >
+                <img
+                  src={img}
+                  alt={name}
+                  className="w-full h-40 object-cover rounded-xl mb-3"
+                />
+                <p className="text-green-900 font-semibold text-xl text-center">
+                  {name}
+                </p>
+              </div>
+              <div className="mt-3 space-y-1">
+                {venues.length === 0 && (
+                  <p className="text-xs text-gray-500 text-center">No venues yet</p>
+                )}
+                {venues.map((v) => (
+                  <button
+                    key={v.id}
+                    className="block w-full text-left text-sm text-gray-700 hover:text-green-700 truncate"
+                    title={v.name}
+                    onClick={() => navigate(`/venue/${v.id}`)}
+                  >
+                    {v.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </section>
   );
