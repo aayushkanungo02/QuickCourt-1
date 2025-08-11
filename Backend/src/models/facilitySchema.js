@@ -17,7 +17,7 @@ const facilitySchema = new mongoose.Schema(
     },
     supportedSports: [{ type: String }],
     amenities: [{ type: String }],
-    photos: { type: String }, // URLs to images
+    photos: [{ type: String }], // Changed to array to store multiple URLs
     status: {
       type: String,
       enum: ["pending", "approved", "rejected"],
