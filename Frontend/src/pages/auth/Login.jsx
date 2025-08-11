@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -15,17 +16,28 @@ export default function Login() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
+  const { mutate: loginMutate, isPending } = useMutation({
+    mutationFn: async () => axiosInstance.post("/auth/login", form),
+    onSuccess: () => {
+      navigate("/");
+    },
+    onError: (err) => {
+      const message = err?.response?.data?.message || "Login failed";
+      if (message.toLowerCase().includes("not verified")) {
+        try {
+          sessionStorage.setItem("pendingEmail", form.email);
+        } catch {}
+        navigate("/otp-verification");
+      } else {
+        console.error(message);
+      }
+    },
+  });
+
+  const handleSubmit = (e) => {
     e.preventDefault();
     setLoading(true);
-    try {
-      await axiosInstance.post("/auth/login", form);
-      navigate("/dashboard");
-    } catch (err) {
-      console.error(err.response?.data || err.message);
-    } finally {
-      setLoading(false);
-    }
+    loginMutate(undefined, { onSettled: () => setLoading(false) });
   };
 
   return (
@@ -71,13 +83,17 @@ export default function Login() {
             />
           </div>
 
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading ? "Logging in..." : "Login"}
+          <Button
+            type="submit"
+            disabled={loading || isPending}
+            className="w-full"
+          >
+            {loading || isPending ? "Logging in..." : "Login"}
           </Button>
 
           <p className="text-center text-sm text-gray-600 mt-4">
             Don&apos;t have an account?{" "}
-            <Link to="/" className="text-blue-600 hover:underline font-medium">
+            <Link to="/signup" className="text-blue-600 hover:underline font-medium">
               Sign Up
             </Link>
           </p>

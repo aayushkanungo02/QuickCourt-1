@@ -1,50 +1,59 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { axiosInstance } from "@/lib/axios";
 import { useNavigate, Link } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
 
 export default function OtpVerification() {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  const email = useMemo(() => {
+    try {
+      return sessionStorage.getItem("pendingEmail") || "";
+    } catch {
+      return "";
+    }
+  }, []);
+
+  const { mutate: verifyMutate, isPending } = useMutation({
+    mutationFn: async () =>
+      axiosInstance.post("/auth/verify-otp", { email, otp }),
+    onSuccess: () => {
+      try {
+        sessionStorage.removeItem("pendingEmail");
+      } catch {}
+      navigate("/");
+    },
+    onError: (err) => {
+      console.error(err?.response?.data || err?.message);
+    },
+  });
+
+  const handleSubmit = (e) => {
     e.preventDefault();
     setLoading(true);
-    try {
-      await axiosInstance.post("/auth/verify-otp", { otp });
-      navigate("/login");
-    } catch (err) {
-      console.error(err.response?.data || err.message);
-    } finally {
-      setLoading(false);
-    }
+    verifyMutate(undefined, { onSettled: () => setLoading(false) });
   };
 
   const handleResend = async () => {
-    try {
-      await axiosInstance.post("/auth/resend-otp");
-      alert("OTP resent successfully!");
-    } catch (err) {
-      console.error(err.response?.data || err.message);
-    }
+    // Optional: Implement resend endpoint if available on backend
   };
 
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Left Side - Image */}
-       {/* Left side - Image */}
-     <div className="hidden md:flex flex-1 bg-gray-100 border-r border-gray-300 h-screen overflow-hidden">
-  <img
-    src="/login.jpg"
-    alt="Sign Up Illustration"
-    className="w-full h-full object-cover"
-  />
-</div>
-
-
+      {/* Left side - Image */}
+      <div className="hidden md:flex flex-1 bg-gray-100 border-r border-gray-300 h-screen overflow-hidden">
+        <img
+          src="/login.jpg"
+          alt="Sign Up Illustration"
+          className="w-full h-full object-cover"
+        />
+      </div>
 
       {/* Right Side - OTP Form */}
       <div className="flex flex-1 items-center justify-center p-6">
@@ -55,8 +64,8 @@ export default function OtpVerification() {
           <h2 className="text-2xl font-bold text-center">OTP Verification</h2>
 
           <p className="mt-6 text-gray-700 text-sm text-center px-4">
-          Enter the OTP sent to your registered email to verify your account.
-        </p>
+            Enter the OTP sent to your registered email to verify your account.
+          </p>
 
           <div className="space-y-2">
             <Label htmlFor="otp">Enter OTP</Label>
@@ -70,8 +79,12 @@ export default function OtpVerification() {
             />
           </div>
 
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading ? "Verifying..." : "Verify OTP"}
+          <Button
+            type="submit"
+            disabled={loading || isPending}
+            className="w-full"
+          >
+            {loading || isPending ? "Verifying..." : "Verify OTP"}
           </Button>
 
           <div className="text-sm text-center text-gray-600 space-y-2">
