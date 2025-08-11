@@ -203,13 +203,13 @@ export default function MoreOptions() {
             Search Venues
           </h2>
           <div className="relative">
-            <input
-              type="text"
+          <input
+            type="text"
               className="w-full border border-green-200 rounded-xl px-4 py-3 pl-10 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-green-50/50 placeholder-green-500 text-green-900 shadow-sm"
-              placeholder="Type venue name..."
-              value={searchName}
-              onChange={(e) => setSearchName(e.target.value)}
-            />
+            placeholder="Type venue name..."
+            value={searchName}
+            onChange={(e) => setSearchName(e.target.value)}
+          />
             <svg
               className="w-4 h-4 text-green-500 absolute left-3 top-1/2 transform -translate-y-1/2"
               fill="none"
@@ -282,7 +282,7 @@ export default function MoreOptions() {
                       : "border-green-200 bg-white/70 hover:bg-green-50/70"
                   }`}
                 >
-                  <input
+          <input
                     type="checkbox"
                     className="h-4 w-4 accent-green-600 rounded"
                     checked={checked}
@@ -295,7 +295,7 @@ export default function MoreOptions() {
                   >
                     ⭐ {rating}+
                   </span>
-                </label>
+            </label>
               );
             })}
           </div>
@@ -411,16 +411,16 @@ export default function MoreOptions() {
                     / hour
                   </span>
                 </p>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
                     navigate(`/venue/${venue.id}`);
-                  }}
+                    }}
                   className="mt-auto bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
-                >
-                  Book This Venue
-                </button>
-              </div>
+                  >
+                    Book This Venue
+                  </button>
+                </div>
             ))}
           </div>
         )}
