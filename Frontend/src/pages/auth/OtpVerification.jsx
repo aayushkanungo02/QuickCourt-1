@@ -9,6 +9,7 @@ import { useMutation } from "@tanstack/react-query";
 export default function OtpVerification() {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState(""); // NEW state for invalid OTP message
   const navigate = useNavigate();
 
   const email = useMemo(() => {
@@ -30,11 +31,13 @@ export default function OtpVerification() {
     },
     onError: (err) => {
       console.error(err?.response?.data || err?.message);
+      setErrorMsg("Invalid OTP"); // Set error message on failure
     },
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setErrorMsg(""); // clear previous error
     setLoading(true);
     verifyMutate(undefined, { onSettled: () => setLoading(false) });
   };
@@ -46,7 +49,6 @@ export default function OtpVerification() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Left Side - Image */}
-      {/* Left side - Image */}
       <div className="hidden md:flex flex-1 bg-gray-100 border-r border-gray-300 h-screen overflow-hidden">
         <img
           src="/login.jpg"
@@ -78,6 +80,13 @@ export default function OtpVerification() {
               className="text-center tracking-widest font-semibold"
             />
           </div>
+
+          {/* Error Message */}
+          {errorMsg && (
+            <div className="text-red-500 text-sm font-medium text-center">
+              {errorMsg}
+            </div>
+          )}
 
           <Button
             type="submit"
