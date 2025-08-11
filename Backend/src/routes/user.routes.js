@@ -3,6 +3,7 @@ import { protect } from "../middleware/authMiddleware.js";
 import {
   getVenues,
   getSingleVenue,
+  createReview,
   createBooking,
   getMyBookings,
   cancelBooking,
@@ -18,6 +19,8 @@ router.get("/venues/:venueId", getSingleVenue);
 
 // Protected: Bookings and Profile
 router.use(protect);
+// Reviews
+router.post("/venues/:venueId/reviews", createReview);
 router.post("/bookings", createBooking);
 router.get("/bookings", getMyBookings);
 router.patch("/bookings/:bookingId/cancel", cancelBooking);

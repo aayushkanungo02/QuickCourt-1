@@ -177,6 +177,7 @@ export const getSingleVenue = async (req, res) => {
         avatar: r.userId?.avatar,
         rating: r.rating,
         comment: r.comment,
+        sportType: r.sportType,
         createdAt: r.createdAt,
       })),
     };
@@ -191,6 +192,43 @@ export const getSingleVenue = async (req, res) => {
       success: false,
       message: error.message || "Failed to fetch venue details",
     });
+  }
+};
+
+export const createReview = async (req, res) => {
+  try {
+    const { venueId } = req.params;
+    const { rating, comment, sportType } = req.body;
+    const userId = req.user?._id;
+
+    if (!mongoose.isValidObjectId(venueId)) {
+      return res.status(400).json({ success: false, message: "Invalid Venue ID" });
+    }
+
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    const facility = await Facility.findById(venueId).exec();
+    if (!facility || facility.status !== "approved") {
+      return res.status(404).json({ success: false, message: "Venue not found or not approved" });
+    }
+
+    if (typeof rating !== "number" || rating < 1 || rating > 5) {
+      return res.status(400).json({ success: false, message: "Rating must be a number between 1 and 5" });
+    }
+
+    const newReview = await Review.create({
+      userId,
+      facilityId: venueId,
+      rating,
+      comment: comment ?? "",
+      sportType: sportType ?? undefined,
+    });
+
+    return res.status(201).json({ success: true, message: "Review created", data: newReview });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message || "Failed to create review" });
   }
 };
 
