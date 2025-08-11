@@ -5,7 +5,7 @@ import Login from "./pages/auth/Login";
 import OtpVerification from "./pages/auth/OtpVerification";
 import UserHomePage from "./pages/user/userHomepage";
 import MoreOptions from "./pages/user/moreOptions";
-import VenueDetail from "./pages/VenueDetail";
+import VenueDetail from "./pages/user/VenueDetail";
 
 const App = () => {
   return (
