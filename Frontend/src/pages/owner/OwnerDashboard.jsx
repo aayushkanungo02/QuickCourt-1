@@ -81,22 +81,14 @@ function MiniCalendar({ datesWithBookings }) {
 export default function OwnerDashboard() {
   const { authUser } = useAuthUser();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ["owner-dashboard"],
     queryFn: async () => {
-      try {
-        const res = await axiosInstance.get("/owner/dashboard");
-        return res.data?.data;
-      } catch {
-        // Fallback mocked shape if endpoint not ready
-        return {
-          totalBookings: 0,
-          activeCourts: 0,
-          earnings: 0,
-          datesWithBookings: [],
-        };
-      }
+      const res = await axiosInstance.get("/users/owner/dashboard");
+      return res.data?.data;
     },
+    retry: 2,
+    retryDelay: 1000,
   });
 
   const totalBookings = data?.totalBookings ?? 0;
@@ -115,34 +107,62 @@ export default function OwnerDashboard() {
         </p>
       </div>
 
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-700 text-sm">
+            Error loading dashboard data: {error.message}
+          </p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard
           title="Total Bookings"
           value={isLoading ? "—" : totalBookings}
           subtitle="All-time"
-          icon={"B"}
+          icon={"📊"}
         />
         <StatCard
           title="Active Courts"
           value={isLoading ? "—" : activeCourts}
           subtitle="Currently available"
-          icon={"C"}
+          icon={"🏟️"}
         />
         <StatCard
           title="Earnings"
           value={isLoading ? "—" : `₹${Number(earnings).toLocaleString()}`}
-          subtitle="Simulated"
-          icon={"₹"}
+          subtitle="Total revenue"
+          icon={"💰"}
         />
         <StatCard
           title="This Month"
           value={isLoading ? "—" : datesWithBookings.length}
           subtitle="Days with bookings"
-          icon={"M"}
+          icon={"📅"}
         />
       </div>
 
-      <MiniCalendar datesWithBookings={datesWithBookings} />
+      {isLoading ? (
+        <div className="bg-white rounded-xl shadow-md p-5">
+          <div className="animate-pulse">
+            <div className="h-6 bg-gray-200 rounded w-1/3 mb-3"></div>
+            <div className="grid grid-cols-7 gap-2 text-xs text-gray-500 mb-2">
+              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+                <div key={d} className="text-center">
+                  {d}
+                </div>
+              ))}
+            </div>
+            <div className="grid grid-cols-7 gap-2">
+              {Array.from({ length: 35 }, (_, i) => (
+                <div key={i} className="h-10 bg-gray-200 rounded-md"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <MiniCalendar datesWithBookings={datesWithBookings} />
+      )}
     </div>
   );
 }

@@ -52,12 +52,27 @@ router.post(
       const body = req.body || {};
       const name = body.name?.trim();
       const description = body.description?.trim();
-      const address = body["location[address]"] ?? body.address;
-      const city = body["location[city]"] ?? body.city;
-      const state = body["location[state]"] ?? body.state;
-      const zip = body["location[zip]"] ?? body.zip;
+      
+      // Extract location data from flat format
+      const address = body.address || "";
+      const city = body.city || "";
+      const state = body.state || "";
+      const zip = body.zip || "";
+      
       const supportedSports = body.supportedSports;
       const amenities = body.amenities;
+      
+      // Debug logging (remove in production)
+      console.log("Received facility data:", {
+        name,
+        description,
+        address,
+        city,
+        state,
+        zip,
+        supportedSports,
+        amenities
+      });
 
       if (!name || !description) {
         return res.status(400).json({
@@ -65,10 +80,12 @@ router.post(
           message: "Name and description are required",
         });
       }
+      
+      // Check if any location field is missing
       if (!address || !city || !state || !zip) {
         return res.status(400).json({
           success: false,
-          message: "Location address, city, state and zip are required",
+          message: `Location fields are required. Received: address="${address}", city="${city}", state="${state}", zip="${zip}"`,
         });
       }
 
@@ -153,5 +170,68 @@ router.put(
     }
   }
 );
+
+// Owner Dashboard endpoint
+router.get("/owner/dashboard", async (req, res) => {
+  try {
+    const { Facility } = await import("../models/facilitySchema.js");
+    const { Booking } = await import("../models/bookingschema.js");
+    const { Court } = await import("../models/courtSchema.js");
+
+    // Get all facilities owned by the current user
+    const facilities = await Facility.find({ ownerId: req.user._id }).exec();
+    const facilityIds = facilities.map(f => f._id);
+
+    // Get total bookings for all facilities owned by this user
+    const totalBookings = await Booking.countDocuments({
+      facilityId: { $in: facilityIds }
+    }).exec();
+
+    // Get active courts (courts that belong to facilities owned by this user)
+    const activeCourts = await Court.countDocuments({
+      facilityId: { $in: facilityIds }
+    }).exec();
+
+    // Calculate earnings from all bookings
+    const earningsData = await Booking.aggregate([
+      { $match: { facilityId: { $in: facilityIds } } },
+      { $group: { _id: null, totalEarnings: { $sum: "$totalPrice" } } }
+    ]);
+    const earnings = earningsData.length > 0 ? earningsData[0].totalEarnings : 0;
+
+    // Get dates with bookings for this month
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+    
+    const endOfMonth = new Date();
+    endOfMonth.setMonth(endOfMonth.getMonth() + 1);
+    endOfMonth.setDate(0);
+    endOfMonth.setHours(23, 59, 59, 999);
+
+    const monthlyBookings = await Booking.find({
+      facilityId: { $in: facilityIds },
+      startTime: { $gte: startOfMonth, $lte: endOfMonth }
+    }).exec();
+
+    const datesWithBookings = [...new Set(
+      monthlyBookings.map(booking => 
+        booking.startTime.toISOString().split('T')[0]
+      )
+    )];
+
+    return res.json({
+      success: true,
+      data: {
+        totalBookings,
+        activeCourts,
+        earnings,
+        datesWithBookings
+      }
+    });
+  } catch (e) {
+    return res.status(500).json({ success: false, message: e.message });
+  }
+});
 
 export default router;
