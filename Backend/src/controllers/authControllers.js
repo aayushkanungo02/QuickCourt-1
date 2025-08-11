@@ -71,6 +71,15 @@ export const verifyOtp = async (req, res, next) => {
     await user.save();
 
     const token = generateToken(user);
+    // Optionally set httpOnly cookie so clients don't need to manage Authorization header
+    if (res.cookie) {
+      res.cookie("token", token, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 5 * 24 * 60 * 60 * 1000,
+      });
+    }
     res.json({ success: true, token, user });
   } catch (err) {
     next(err);
@@ -98,7 +107,24 @@ export const login = async (req, res, next) => {
         .json({ success: false, message: "Invalid credentials" });
 
     const token = generateToken(user);
+    if (res.cookie) {
+      res.cookie("token", token, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 5 * 24 * 60 * 60 * 1000,
+      });
+    }
     res.json({ success: true, token, user });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const logout = async (req, res, next) => {
+  try {
+    res.clearCookie("token");
+    res.json({ success: true, message: "Logged out successfully" });
   } catch (err) {
     next(err);
   }

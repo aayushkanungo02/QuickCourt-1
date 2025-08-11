@@ -2,19 +2,55 @@ import jwt from "jsonwebtoken";
 import User from "../models/userschema.js";
 
 export const protect = async (req, res, next) => {
-  let token;
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
-  ) {
-    try {
-      token = req.headers.authorization.split(" ")[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = await User.findById(decoded.id).select("-password");
-      next();
-    } catch (error) {
-      res.status(401).json({ message: "Not authorized, token failed" });
+  try {
+    // Extract token from Authorization header, cookies, or query
+    const authHeader = req.headers.authorization || req.headers.Authorization;
+    let token = null;
+
+    if (
+      authHeader &&
+      typeof authHeader === "string" &&
+      authHeader.toLowerCase().startsWith("bearer ")
+    ) {
+      token = authHeader.slice(7).trim();
     }
+
+    if (!token && req.cookies) {
+      token = req.cookies.token || req.cookies.jwt || null;
+    }
+
+    if (!token && req.query && typeof req.query.token === "string") {
+      token = req.query.token;
+    }
+
+    if (!token) {
+      return res
+        .status(401)
+        .json({ message: "Not authorized, no token provided" });
+    }
+
+    if (!process.env.JWT_SECRET) {
+      return res
+        .status(500)
+        .json({ message: "Server misconfiguration: JWT secret missing" });
+    }
+
+    // Verify token and attach user to request
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select("-password");
+
+    if (!user) {
+      return res
+        .status(401)
+        .json({ message: "Not authorized, user not found" });
+    }
+
+    req.user = user; // role is available via user.role; token may also carry role
+    return next();
+  } catch (error) {
+    if (error && error.name === "TokenExpiredError") {
+      return res.status(401).json({ message: "Not authorized, token expired" });
+    }
+    return res.status(401).json({ message: "Not authorized, invalid token" });
   }
-  if (!token) res.status(401).json({ message: "Not authorized, no token" });
 };

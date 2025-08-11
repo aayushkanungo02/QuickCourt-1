@@ -7,6 +7,7 @@ import cookieParser from "cookie-parser";
 import path from "path";
 
 import authRoutes from "./routes/authRoutes.js";
+import userRoutes from "./routes/user.routes.js";
 // import venueRoutes from "./routes/venueRoutes.js";
 // import courtRoutes from "./routes/courtRoutes.js";
 // import bookingRoutes from "./routes/bookingRoutes.js";
@@ -28,6 +29,7 @@ app.use(cookieParser()); // Middleware to parse cookies
 app.use(express.urlencoded({ extended: true })); // Middleware to parse URL-encoded bodies
 
 app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
 // app.use("/api/venues", venueRoutes);
 // app.use("/api/courts", courtRoutes);
 // app.use("/api/bookings", bookingRoutes);
