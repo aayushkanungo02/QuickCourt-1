@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -7,7 +8,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from "@/components/ui/select";
 import { axiosInstance } from "@/lib/axios";
 import { useNavigate, Link } from "react-router-dom";
@@ -18,7 +19,7 @@ export default function Signup() {
     email: "",
     password: "",
     role: "",
-    avatar: null
+    avatar: null,
   });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -27,37 +28,46 @@ export default function Signup() {
     const { name, value, files } = e.target;
     setForm((prev) => ({
       ...prev,
-      [name]: files ? files[0] : value
+      [name]: files ? files[0] : value,
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const { mutate: signupMutate, isPending } = useMutation({
+    mutationFn: async () => {
+      const formData = new FormData();
+      formData.append("fullName", form.fullName);
+      formData.append("email", form.email);
+      formData.append("password", form.password);
+      if (form.role) formData.append("role", form.role);
+      if (form.avatar) formData.append("avatar", form.avatar);
+      return axiosInstance.post("/auth/signup", formData);
+    },
+    onSuccess: () => {
+      try {
+        sessionStorage.setItem("pendingEmail", form.email);
+      } catch {}
+      navigate("/otp-verification");
+    },
+    onError: (err) => {
+      console.error(err?.response?.data || err?.message);
+    },
+  });
+
+  const handleSubmit = (e) => {
     e.preventDefault();
     setLoading(true);
-    try {
-      const formData = new FormData();
-      Object.keys(form).forEach((key) => formData.append(key, form[key]));
-      await axiosInstance.post("/auth/signup", formData);
-      navigate("/otp-verification");
-    } catch (err) {
-      console.error(err.response?.data || err.message);
-    } finally {
-      setLoading(false);
-    }
+    signupMutate(undefined, { onSettled: () => setLoading(false) });
   };
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-gray-50">
-    <div className="hidden md:flex flex-1 bg-gray-100 border-r border-gray-300 h-screen overflow-hidden">
-  <img
-    src="/login.jpg"
-    alt="Sign Up Illustration"
-    className="w-full h-full object-cover"
-  />
-</div>
-
-
-
+      <div className="hidden md:flex flex-1 bg-gray-100 border-r border-gray-300 h-screen overflow-hidden">
+        <img
+          src="/login.jpg"
+          alt="Sign Up Illustration"
+          className="w-full h-full object-cover"
+        />
+      </div>
 
       {/* Right side - Form */}
       <div className="flex flex-1 items-center justify-center p-6">
@@ -102,6 +112,7 @@ export default function Signup() {
           <div>
             <Label>Role</Label>
             <Select
+              value={form.role || undefined}
               onValueChange={(value) =>
                 setForm((prev) => ({ ...prev, role: value }))
               }
@@ -110,8 +121,9 @@ export default function Signup() {
                 <SelectValue placeholder="Select role" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="user">User</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="User">User</SelectItem>
+                <SelectItem value="Facility Owner">Facility Owner</SelectItem>
+                <SelectItem value="Admin">Admin</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -126,8 +138,12 @@ export default function Signup() {
             />
           </div>
 
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading ? "Signing up..." : "Sign Up"}
+          <Button
+            type="submit"
+            disabled={loading || isPending}
+            className="w-full"
+          >
+            {loading || isPending ? "Signing up..." : "Sign Up"}
           </Button>
 
           <p className="text-center text-sm text-gray-600 mt-2">

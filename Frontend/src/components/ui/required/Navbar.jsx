@@ -21,7 +21,7 @@ export function Navbar() {
         >
           Login
         </Link>
-        <Link to="/" className="text-gray-700 hover:text-blue-600 font-medium">
+        <Link to="/signup" className="text-gray-700 hover:text-blue-600 font-medium">
           Signup
         </Link>
       </div>
