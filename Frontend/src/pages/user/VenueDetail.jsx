@@ -1,15 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "../../lib/axios";
 import { Button } from "../../components/ui/button";
 import { Separator } from "../../components/ui/separator";
 import { Navbar } from "../../components/ui/required/Navbar";
+import useAuthUser from "../../hooks/useAuthuser";
 
 export default function VenueDetail() {
   const { id } = useParams();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { authUser } = useAuthUser();
+
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewSport, setReviewSport] = useState("");
 
   const {
     data: venue,
@@ -22,6 +30,24 @@ export default function VenueDetail() {
       return res.data?.data;
     },
     enabled: !!id,
+  });
+
+  const createReviewMutation = useMutation({
+    mutationFn: async (payload) => {
+      const res = await axiosInstance.post(
+        `/users/venues/${id}/reviews`,
+        payload,
+        { withCredentials: true }
+      );
+      return res.data?.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["venue", id] });
+      setIsReviewOpen(false);
+      setReviewComment("");
+      setReviewRating(5);
+      setReviewSport("");
+    },
   });
 
   const images = venue?.photos || [];
@@ -362,6 +388,194 @@ export default function VenueDetail() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Reviews Section */}
+        <div className="mt-6 bg-white/70 backdrop-blur-sm border border-gray-200 rounded-2xl overflow-hidden">
+          <div className="p-4 border-b border-gray-200">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <div className="w-8 h-8 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center">
+                  <svg
+                    className="w-4 h-4 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.966a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.383 2.46a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.383-2.46a1 1 0 00-1.176 0l-3.383 2.46c-.784.57-1.838-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118l-3.383-2.46c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.966z"
+                    />
+                  </svg>
+                </div>
+                Reviews
+              </h2>
+              {authUser ? (
+                <button
+                  onClick={() => setIsReviewOpen(true)}
+                  className="inline-flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-sm shadow transition"
+                  aria-label="Add Review"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                  Add
+                </button>
+              ) : (
+                <Link
+                  to="/login"
+                  className="text-green-700 text-sm hover:underline"
+                >
+                  Login to review
+                </Link>
+              )}
+            </div>
+
+            <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
+              {venue.reviews?.length ? (
+                venue.reviews.map((r, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-white border border-gray-200 rounded-xl p-3 flex items-start gap-3 text-sm"
+                  >
+                    <img
+                      src={r.avatar}
+                      alt={r.user}
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-gray-900">
+                          {r.user}
+                        </span>
+                        <div className="flex items-center gap-1 text-xs">
+                          <span className="text-yellow-600 font-bold">
+                            {r.rating.toFixed ? r.rating.toFixed(1) : r.rating}
+                          </span>
+                          <svg
+                            className="w-3.5 h-3.5 text-yellow-500"
+                            fill="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                          </svg>
+                        </div>
+                      </div>
+                      {r.sportType && (
+                        <div className="text-[11px] text-gray-500 mb-0.5">
+                          Sport: {r.sportType}
+                        </div>
+                      )}
+                      <div className="text-gray-700 leading-tight">
+                        {r.comment}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-gray-500 text-sm">No reviews yet.</div>
+              )}
+            </div>
+          </div>
+
+          {isReviewOpen && (
+            <div className="p-4">
+              <div className="max-w-md bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-lg font-bold text-gray-900">
+                    Add review
+                  </h3>
+                  <button
+                    onClick={() => setIsReviewOpen(false)}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    createReviewMutation.mutate({
+                      rating: Number(reviewRating),
+                      comment: reviewComment,
+                      sportType: reviewSport || undefined,
+                    });
+                  }}
+                  className="space-y-3 text-sm"
+                >
+                  <div>
+                    <label className="block text-gray-700 mb-1">Rating</label>
+                    <select
+                      value={reviewRating}
+                      onChange={(e) => setReviewRating(Number(e.target.value))}
+                      className="w-full border border-gray-300 rounded px-2 py-1"
+                    >
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <option key={n} value={n}>
+                          {n}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-gray-700 mb-1">
+                      Sport (optional)
+                    </label>
+                    <input
+                      value={reviewSport}
+                      onChange={(e) => setReviewSport(e.target.value)}
+                      placeholder="e.g., Football"
+                      className="w-full border border-gray-300 rounded px-2 py-1"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-700 mb-1">Comment</label>
+                    <textarea
+                      value={reviewComment}
+                      onChange={(e) => setReviewComment(e.target.value)}
+                      rows={3}
+                      className="w-full border border-gray-300 rounded px-2 py-1"
+                      placeholder="Share your experience..."
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="submit"
+                      className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 text-sm"
+                    >
+                      {createReviewMutation.isLoading
+                        ? "Submitting..."
+                        : "Submit"}
+                    </Button>
+                    <button
+                      type="button"
+                      onClick={() => setIsReviewOpen(false)}
+                      className="px-3 py-1.5 text-sm rounded border"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                  {createReviewMutation.isError && (
+                    <div className="text-red-600 text-xs">
+                      Failed to submit review
+                    </div>
+                  )}
+                </form>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Continuous Professional Sections without shadows */}
