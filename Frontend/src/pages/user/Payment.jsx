@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   useElements,
@@ -8,7 +8,7 @@ import {
 } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { axiosInstance } from "../../lib/axios";
-import { Navbar } from "../../components/ui/required/Navbar";
+import {Navbar} from "../../components/ui/required/Navbar";
 import { Button } from "../../components/ui/button";
 
 // Provide your publishable key via environment variable in Vite: VITE_STRIPE_PUBLISHABLE_KEY
@@ -29,10 +29,22 @@ function PaymentForm() {
   const bookingDetails = state?.bookingDetails;
   const venue = state?.venue;
 
-  const amountDisplay = useMemo(
-    () => bookingDetails?.totalAmount || 0,
-    [bookingDetails]
-  );
+  const amountDisplay = useMemo(() => {
+    if (!bookingDetails) return 0;
+    if (typeof bookingDetails.totalAmount === "number")
+      return bookingDetails.totalAmount;
+    const hours = Number(bookingDetails?.duration) || 0;
+    const pricePerHour = Number(
+      bookingDetails?.pricePerHour ?? venue?.startingPrice
+    ) || 0;
+    return hours * pricePerHour;
+  }, [bookingDetails, venue?.startingPrice]);
+
+  useEffect(() => {
+    if (!venue || !bookingDetails) {
+      navigate(`/venue/${id}/book`, { replace: true });
+    }
+  }, [venue, bookingDetails, id, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -50,6 +62,7 @@ function PaymentForm() {
           date: bookingDetails?.selectedDate,
           startTime: bookingDetails?.startTime,
           durationHours: bookingDetails?.duration,
+          amountOverride: amountDisplay,
         },
         { withCredentials: true }
       );

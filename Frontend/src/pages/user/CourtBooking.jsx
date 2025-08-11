@@ -105,6 +105,7 @@ export default function CourtBooking() {
           startTime,
           duration,
           totalAmount,
+          pricePerHour: venue?.startingPrice || 0,
         },
       },
     });
