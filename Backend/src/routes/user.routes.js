@@ -8,6 +8,7 @@ import {
   cancelBooking,
   getMyProfile,
   updateMyProfile,
+  changeMyPassword,
 } from "../controllers/user.controllers.js";
 
 const router = express.Router();
@@ -23,5 +24,6 @@ router.get("/bookings", getMyBookings);
 router.patch("/bookings/:bookingId/cancel", cancelBooking);
 router.get("/me", getMyProfile);
 router.patch("/me", updateMyProfile);
+router.patch("/me/password", changeMyPassword);
 
 export default router;

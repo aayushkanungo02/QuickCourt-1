@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 import User from "../models/userschema.js";
 import { Facility } from "../models/facilitySchema.js";
 import { Court } from "../models/courtSchema.js";
@@ -399,6 +400,52 @@ export const updateMyProfile = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: error.message || "Failed to update profile",
+    });
+  }
+};
+
+export const changeMyPassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword, confirmPassword } = req.body;
+
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      return res
+        .status(400)
+        .json({ success: false, message: "All password fields are required" });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res
+        .status(400)
+        .json({ success: false, message: "New passwords do not match" });
+    }
+
+    const user = await User.findById(req.user._id).exec();
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Old password is incorrect" });
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    user.password = hashed;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Password updated successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to change password",
     });
   }
 };

@@ -20,11 +20,11 @@ import courtRoutes from "./routes/courtRoutes.js";
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4001;
-connectDB();
+
 
 app.use(
   cors({
-    origin: "http://localhost:5173", // Replace with your frontend URL
+    origin: ["http://localhost:5173", "http://localhost:5174"], // Replace with your frontend URL
     credentials: true, // Allow credentials (cookies, authorization headers, etc.)
   })
 );
