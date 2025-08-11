@@ -2,6 +2,7 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "../../../lib/axios";
 import VenueCard from "./venueCard";
+import { Link } from "react-router-dom";
 
 export function VenuesList() {
   const { data, isLoading, isError } = useQuery({
@@ -57,6 +58,15 @@ export function VenuesList() {
           ))}
         </div>
       )}
+      <div className="flex justify-center mt-10">
+        <Link
+          to="/more-options"
+          className="inline-block bg-green-600 hover:bg-green-700 text-white font-semibold px-8 py-3 rounded-lg shadow-md transition-colors duration-300"
+        >
+          Show More Options
+        </Link>
+              
+      </div>
     </section>
   );
 }
