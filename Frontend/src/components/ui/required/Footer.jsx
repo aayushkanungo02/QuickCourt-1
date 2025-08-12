@@ -22,10 +22,6 @@ export function Footer() {
               Your premier destination for sports venue bookings. Connect with players, 
               discover amazing facilities, and enjoy your favorite sports.
             </p>
-            <div className="flex items-center space-x-2 text-green-200">
-              <Star className="w-4 h-4 text-yellow-400" />
-              <span className="text-sm">Rated 4.8/5 by 1000+ users</span>
-            </div>
           </div>
 
           {/* Quick Links */}
@@ -68,19 +64,19 @@ export function Footer() {
             </h4>
             <div className="space-y-2 text-sm">
               <div className="text-green-100 hover:text-green-300 transition-colors cursor-pointer">
-                🏸 Badminton
+                Badminton
               </div>
               <div className="text-green-100 hover:text-green-300 transition-colors cursor-pointer">
-                ⚽ Football
+                Football
               </div>
               <div className="text-green-100 hover:text-green-300 transition-colors cursor-pointer">
-                🏓 Table Tennis
+                Table Tennis
               </div>
               <div className="text-green-100 hover:text-green-300 transition-colors cursor-pointer">
-                🏀 Basketball
+                Basketball
               </div>
               <div className="text-green-100 hover:text-green-300 transition-colors cursor-pointer">
-                🎾 Tennis
+                Tennis
               </div>
             </div>
           </div>
@@ -111,7 +107,7 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Newsletter Section */}
+        {/* Newsletter Section
         <div className="mt-12 pt-8 border-t border-green-700">
           <div className="text-center space-y-4">
             <h4 className="text-xl font-semibold text-green-300">
@@ -131,7 +127,7 @@ export function Footer() {
               </button>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Social Media & Bottom Bar */}
         <div className="mt-12 pt-8 border-t border-green-700">
@@ -172,7 +168,7 @@ export function Footer() {
             <div className="text-center md:text-right text-green-200 text-sm">
               <p>© {currentYear} QuickCourt. All rights reserved.</p>
               <p className="mt-1">
-                Made with ❤️ for sports enthusiasts
+                Made for sports enthusiasts
               </p>
             </div>
           </div>
@@ -189,9 +185,6 @@ export function Footer() {
               <span>Terms of Service</span>
               <span>•</span>
               <span>Cookie Policy</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span>🏆 Trusted by 10,000+ players</span>
             </div>
           </div>
         </div>
