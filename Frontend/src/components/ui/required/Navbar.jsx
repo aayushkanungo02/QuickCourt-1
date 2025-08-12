@@ -40,9 +40,6 @@ export function Navbar() {
     <nav className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-green-900 via-green-800 to-green-900 shadow-lg">
       <Link to="/">
         <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-lg">🏸</span>
-          </div>
           <div className="text-2xl font-bold text-green-300">QuickCourt</div>
         </div>
       </Link>

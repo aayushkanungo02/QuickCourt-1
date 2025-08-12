@@ -13,9 +13,7 @@ export function Footer() {
           {/* Company Info */}
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">🏸</span>
-              </div>
+             
               <h3 className="text-2xl font-bold text-green-300">QuickCourt</h3>
             </div>
             <p className="text-green-100 text-sm leading-relaxed">
