@@ -8,7 +8,7 @@ import {
 } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { axiosInstance } from "../../lib/axios";
-import Navbar from "../../components/ui/required/Navbar";
+import { Navbar } from "../../components/ui/required/Navbar";
 import { Button } from "../../components/ui/button";
 
 // Provide your publishable key via environment variable in Vite: VITE_STRIPE_PUBLISHABLE_KEY
@@ -34,9 +34,8 @@ function PaymentForm() {
     if (typeof bookingDetails.totalAmount === "number")
       return bookingDetails.totalAmount;
     const hours = Number(bookingDetails?.duration) || 0;
-    const pricePerHour = Number(
-      bookingDetails?.pricePerHour ?? venue?.startingPrice
-    ) || 0;
+    const pricePerHour =
+      Number(bookingDetails?.pricePerHour ?? venue?.startingPrice) || 0;
     return hours * pricePerHour;
   }, [bookingDetails, venue?.startingPrice]);
 
