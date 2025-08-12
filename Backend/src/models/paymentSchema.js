@@ -6,8 +6,19 @@ const paymentSchema = new mongoose.Schema(
       ref: "Booking",
       required: true,
     },
-    stripePaymentIntentId: { type: String, required: true, unique: true },
-    amount: { type: Number, required: true },
+    provider: {
+      type: String,
+      enum: ["stripe", "razorpay"],
+      required: true,
+    },
+    // Stripe fields
+    stripePaymentIntentId: { type: String, unique: true, sparse: true },
+    // Razorpay fields
+    razorpayOrderId: { type: String },
+    razorpayPaymentId: { type: String },
+    razorpaySignature: { type: String },
+    // Generic
+    amount: { type: Number, required: true }, // in INR rupees
     currency: { type: String, default: "inr" },
     status: {
       type: String,

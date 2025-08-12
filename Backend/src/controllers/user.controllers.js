@@ -164,6 +164,18 @@ export const getSingleVenue = async (req, res) => {
         .exec(),
     ]);
 
+    const startingPrice = courts && courts.length
+      ? Math.min(...courts.map((c) => c.pricePerHour || Infinity))
+      : 0;
+    const averageRating = reviews && reviews.length
+      ? Number(
+          (
+            reviews.reduce((sum, r) => sum + (Number(r.rating) || 0), 0) /
+            reviews.length
+          ).toFixed(1)
+        )
+      : 0;
+
     const response = {
       id: facility._id,
       name: facility.name,
@@ -172,6 +184,8 @@ export const getSingleVenue = async (req, res) => {
       sportTypes: facility.supportedSports,
       amenities: facility.amenities,
       photos: facility.photos,
+      startingPrice: Number.isFinite(startingPrice) ? startingPrice : 0,
+      rating: averageRating,
       courts,
       reviews: reviews.map((r) => ({
         user: r.userId?.fullName,
