@@ -6,6 +6,8 @@ import {
   confirmPayment,
   createStripePaymentIntent,
   finalizePayment,
+  createRazorpayOrder,
+  verifyRazorpayPayment,
 } from "../controllers/payments.controllers.js";
 
 const router = express.Router();
@@ -21,6 +23,10 @@ router.post("/intent", createStripePaymentIntent);
 
 // Finalize payment (after PI succeeded)
 router.post("/finalize", finalizePayment);
+
+// Razorpay order and verification
+router.post("/razorpay/order", createRazorpayOrder);
+router.post("/razorpay/verify", verifyRazorpayPayment);
 
 // Legacy mock flows
 router.post("/session", createPaymentSession);

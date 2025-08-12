@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 import Stripe from "stripe";
 import { Court } from "../models/courtSchema.js";
 import { Booking } from "../models/bookingschema.js";
+import { Payment } from "../models/paymentSchema.js";
+import crypto from "crypto";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -75,7 +77,7 @@ export const getQuote = async (req, res) => {
 // Create a Stripe PaymentIntent for a facility by sport/date/time/duration
 export const createStripePaymentIntent = async (req, res) => {
   try {
-    const { facilityId, sportType, date, startTime, durationHours } = req.body;
+    const { facilityId, sportType, date, startTime, durationHours, amountOverride } = req.body;
     const userId = req.user?._id;
 
     if (!userId) {
@@ -122,7 +124,7 @@ export const createStripePaymentIntent = async (req, res) => {
     }
 
     const amountInPaise = Math.round(
-      court.pricePerHour * Number(durationHours) * 100
+      (amountOverride ?? court.pricePerHour * Number(durationHours)) * 100
     );
 
     const paymentIntent = await stripe.paymentIntents.create({
@@ -157,6 +159,145 @@ export const createStripePaymentIntent = async (req, res) => {
   }
 };
 
+// Razorpay integration: create order and verify payment
+export const createRazorpayOrder = async (req, res) => {
+  try {
+    const { facilityId, sportType, date, startTime, durationHours, amountOverride } = req.body;
+    const userId = req.user?._id;
+    if (!userId) return res.status(401).json({ success: false, message: "Unauthorized" });
+    if (!facilityId || !sportType || !date || !startTime || !durationHours)
+      return res.status(400).json({ success: false, message: "Missing required fields" });
+
+    const court = await findCheapestCourtForSport(facilityId, sportType);
+    if (!court) return res.status(404).json({ success: false, message: "No court available for this sport" });
+
+    const start = combineDateAndTime(date, startTime);
+    const end = new Date(start.getTime() + Number(durationHours) * 60 * 60 * 1000);
+
+    const overlapping = await Booking.findOne({
+      courtId: court._id,
+      status: "confirmed",
+      startTime: { $lt: end },
+      endTime: { $gt: start },
+    }).exec();
+    if (overlapping) {
+      return res.status(409).json({ success: false, message: "Time slot is already booked" });
+    }
+
+    // Compute amount in paise; allow override from client to show same UI amount
+    const amountInPaise = Math.round(
+      (amountOverride ?? court.pricePerHour * Number(durationHours)) * 100
+    );
+
+    // Create a Razorpay order via REST API (simple fetch)
+    const keyId = process.env.RAZORPAY_KEY_ID;
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    if (!keyId || !keySecret) {
+      return res.status(500).json({ success: false, message: "Razorpay keys not configured" });
+    }
+
+    const auth = Buffer.from(`${keyId}:${keySecret}`).toString("base64");
+    const response = await fetch("https://api.razorpay.com/v1/orders", {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${auth}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ amount: amountInPaise, currency: "INR" }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      return res.status(500).json({ success: false, message: data?.error?.description || "Failed to create order" });
+    }
+
+    return res.status(201).json({ success: true, message: "Razorpay order created", data: { orderId: data.id, amount: data.amount, currency: data.currency, courtId: court._id, startISO: start.toISOString(), endISO: end.toISOString() } });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message || "Failed to create Razorpay order" });
+  }
+};
+
+export const verifyRazorpayPayment = async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+    const { courtId, facilityId, startISO, endISO } = req.body; // sent back from client
+    const userId = req.user?._id;
+    if (!userId) return res.status(401).json({ success: false, message: "Unauthorized" });
+
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({ success: false, message: "Missing Razorpay payment fields" });
+    }
+
+    // Validate signature
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    const expected = crypto
+      .createHmac("sha256", keySecret)
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+      .digest("hex");
+
+    if (expected !== razorpay_signature) {
+      return res.status(400).json({ success: false, message: "Invalid payment signature" });
+    }
+
+    // Create booking after successful payment
+    const start = new Date(startISO);
+    const end = new Date(endISO);
+    const durationHours = computeDurationHours(start, end);
+
+    const court = await Court.findById(courtId).exec();
+    if (!court) return res.status(404).json({ success: false, message: "Court not found" });
+
+    const overlapping = await Booking.findOne({
+      courtId,
+      status: "confirmed",
+      startTime: { $lt: end },
+      endTime: { $gt: start },
+    }).exec();
+    if (overlapping) {
+      return res.status(409).json({ success: false, message: "Time slot has just been booked" });
+    }
+
+    const totalPrice = durationHours * court.pricePerHour;
+    
+    // Create booking
+    const booking = await Booking.create({
+      userId,
+      facilityId,
+      courtId,
+      startTime: start,
+      endTime: end,
+      totalPrice,
+      status: "confirmed",
+    });
+
+    // Store payment record in MongoDB
+    const payment = await Payment.create({
+      bookingId: booking._id,
+      provider: "razorpay",
+      razorpayOrderId: razorpay_order_id,
+      razorpayPaymentId: razorpay_payment_id,
+      razorpaySignature: razorpay_signature,
+      amount: totalPrice,
+      currency: "inr",
+      status: "succeeded",
+    });
+
+    return res.status(201).json({ 
+      success: true, 
+      message: "Razorpay payment verified and booking created", 
+      data: { 
+        booking,
+        payment: {
+          orderId: razorpay_order_id,
+          paymentId: razorpay_payment_id,
+          amount: totalPrice,
+          currency: "inr"
+        }
+      } 
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message || "Failed to verify Razorpay payment" });
+  }
+};
 // Finalize payment by verifying PaymentIntent and creating booking
 export const finalizePayment = async (req, res) => {
   try {
@@ -216,6 +357,7 @@ export const finalizePayment = async (req, res) => {
     const durationHours = computeDurationHours(start, end);
     const totalPrice = durationHours * court.pricePerHour;
 
+    // Create booking
     const booking = await Booking.create({
       userId,
       facilityId,
@@ -226,10 +368,27 @@ export const finalizePayment = async (req, res) => {
       status: "confirmed",
     });
 
+    // Store payment record in MongoDB
+    const payment = await Payment.create({
+      bookingId: booking._id,
+      provider: "stripe",
+      stripePaymentIntentId: paymentIntentId,
+      amount: totalPrice,
+      currency: "inr",
+      status: "succeeded",
+    });
+
     return res.status(201).json({
       success: true,
       message: "Booking created after successful payment",
-      data: { booking },
+      data: { 
+        booking,
+        payment: {
+          paymentIntentId: paymentIntentId,
+          amount: totalPrice,
+          currency: "inr"
+        }
+      },
     });
   } catch (error) {
     return res.status(500).json({

@@ -390,193 +390,7 @@ export default function VenueDetail() {
           </div>
         </div>
 
-        {/* Reviews Section */}
-        <div className="mt-6 bg-white/70 backdrop-blur-sm border border-gray-200 rounded-2xl overflow-hidden">
-          <div className="p-4 border-b border-gray-200">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center">
-                  <svg
-                    className="w-4 h-4 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.966a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.383 2.46a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.383-2.46a1 1 0 00-1.176 0l-3.383 2.46c-.784.57-1.838-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118l-3.383-2.46c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.966z"
-                    />
-                  </svg>
-                </div>
-                Reviews
-              </h2>
-              {authUser ? (
-                <button
-                  onClick={() => setIsReviewOpen(true)}
-                  className="inline-flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-sm shadow transition"
-                  aria-label="Add Review"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 4v16m8-8H4"
-                    />
-                  </svg>
-                  Add
-                </button>
-              ) : (
-                <Link
-                  to="/login"
-                  className="text-green-700 text-sm hover:underline"
-                >
-                  Login to review
-                </Link>
-              )}
-            </div>
 
-            <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
-              {venue.reviews?.length ? (
-                venue.reviews.map((r, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-white border border-gray-200 rounded-xl p-3 flex items-start gap-3 text-sm"
-                  >
-                    <img
-                      src={r.avatar}
-                      alt={r.user}
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-gray-900">
-                          {r.user}
-                        </span>
-                        <div className="flex items-center gap-1 text-xs">
-                          <span className="text-yellow-600 font-bold">
-                            {r.rating.toFixed ? r.rating.toFixed(1) : r.rating}
-                          </span>
-                          <svg
-                            className="w-3.5 h-3.5 text-yellow-500"
-                            fill="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                          </svg>
-                        </div>
-                      </div>
-                      {r.sportType && (
-                        <div className="text-[11px] text-gray-500 mb-0.5">
-                          Sport: {r.sportType}
-                        </div>
-                      )}
-                      <div className="text-gray-700 leading-tight">
-                        {r.comment}
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-gray-500 text-sm">No reviews yet.</div>
-              )}
-            </div>
-          </div>
-
-          {isReviewOpen && (
-            <div className="p-4">
-              <div className="max-w-md bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-lg font-bold text-gray-900">
-                    Add review
-                  </h3>
-                  <button
-                    onClick={() => setIsReviewOpen(false)}
-                    className="text-gray-500 hover:text-gray-700"
-                  >
-                    ✕
-                  </button>
-                </div>
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    createReviewMutation.mutate({
-                      rating: Number(reviewRating),
-                      comment: reviewComment,
-                      sportType: reviewSport || undefined,
-                    });
-                  }}
-                  className="space-y-3 text-sm"
-                >
-                  <div>
-                    <label className="block text-gray-700 mb-1">Rating</label>
-                    <select
-                      value={reviewRating}
-                      onChange={(e) => setReviewRating(Number(e.target.value))}
-                      className="w-full border border-gray-300 rounded px-2 py-1"
-                    >
-                      {[1, 2, 3, 4, 5].map((n) => (
-                        <option key={n} value={n}>
-                          {n}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-gray-700 mb-1">
-                      Sport (optional)
-                    </label>
-                    <input
-                      value={reviewSport}
-                      onChange={(e) => setReviewSport(e.target.value)}
-                      placeholder="e.g., Football"
-                      className="w-full border border-gray-300 rounded px-2 py-1"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-gray-700 mb-1">Comment</label>
-                    <textarea
-                      value={reviewComment}
-                      onChange={(e) => setReviewComment(e.target.value)}
-                      rows={3}
-                      className="w-full border border-gray-300 rounded px-2 py-1"
-                      placeholder="Share your experience..."
-                    />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      type="submit"
-                      className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 text-sm"
-                    >
-                      {createReviewMutation.isLoading
-                        ? "Submitting..."
-                        : "Submit"}
-                    </Button>
-                    <button
-                      type="button"
-                      onClick={() => setIsReviewOpen(false)}
-                      className="px-3 py-1.5 text-sm rounded border"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                  {createReviewMutation.isError && (
-                    <div className="text-red-600 text-xs">
-                      Failed to submit review
-                    </div>
-                  )}
-                </form>
-              </div>
-            </div>
-          )}
-        </div>
 
         {/* Continuous Professional Sections without shadows */}
         <div className="mt-12 bg-white/70 backdrop-blur-sm border border-gray-200 rounded-3xl overflow-hidden">
@@ -742,6 +556,280 @@ export default function VenueDetail() {
               </p>
             </div>
           </div>
+
+          {/* Reviews Section - Enhanced UI at the bottom */}
+          <div className="p-10 bg-gradient-to-r from-yellow-25 to-orange-25 border-t border-gray-200">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center">
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.966a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.383 2.46a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.383-2.46a1 1 0 00-1.176 0l-3.383 2.46c-.784.57-1.838-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118l-3.383-2.46c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.966z"
+                    />
+                  </svg>
+                </div>
+                Customer Reviews
+                {venue.rating && (
+                  <span className="text-lg font-normal text-gray-600 ml-4">
+                    ({venue.rating.toFixed(1)} ★ average)
+                  </span>
+                )}
+              </h2>
+              {authUser ? (
+                <button
+                  onClick={() => setIsReviewOpen(true)}
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-6 py-3 rounded-xl text-lg font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                  aria-label="Add Review"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                  Write a Review
+                </button>
+              ) : (
+                <Link
+                  to="/login"
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl text-lg font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+                    />
+                  </svg>
+                  Login to Review
+                </Link>
+              )}
+            </div>
+
+            {/* Reviews Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {venue.reviews?.length ? (
+                venue.reviews.slice(0, 6).map((r, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-white/80 backdrop-blur-sm border border-yellow-200 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                  >
+                    <div className="flex items-start gap-4 mb-4">
+                      <img
+                        src={r.avatar || "/default-avatar.png"}
+                        alt={r.user}
+                        className="w-12 h-12 rounded-full object-cover border-2 border-yellow-200"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-bold text-gray-900 text-lg">
+                            {r.user}
+                          </h4>
+                          <div className="flex items-center gap-1">
+                            <span className="text-yellow-600 font-bold text-lg">
+                              {r.rating.toFixed ? r.rating.toFixed(1) : r.rating}
+                            </span>
+                            <svg
+                              className="w-5 h-5 text-yellow-500"
+                              fill="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                            </svg>
+                          </div>
+                        </div>
+                        {r.sportType && (
+                          <div className="text-sm text-gray-600 bg-yellow-100 px-2 py-1 rounded-full inline-block mt-1">
+                            {r.sportType}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-gray-700 leading-relaxed">
+                      "{r.comment}"
+                    </div>
+                    <div className="text-xs text-gray-500 mt-3">
+                      {new Date(r.createdAt).toLocaleDateString()}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-full text-center py-16">
+                  <div className="w-24 h-24 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg
+                      className="w-12 h-12 text-yellow-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.966a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.383 2.46a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.383-2.46a1 1 0 00-1.176 0l-3.383 2.46c-.784.57-1.838-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118l-3.383-2.46c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.966z"
+                      />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    Be the First to Review!
+                  </h3>
+                  <p className="text-gray-600">
+                    Share your experience and help others discover this amazing venue.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Show More Reviews Button */}
+            {venue.reviews?.length > 6 && (
+              <div className="text-center">
+                <button className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+                  View All Reviews ({venue.reviews.length})
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Review Modal */}
+          {isReviewOpen && (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+                <div className="p-6 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-2xl font-bold text-gray-900">
+                      Write Your Review
+                    </h3>
+                    <button
+                      onClick={() => setIsReviewOpen(false)}
+                      className="text-gray-500 hover:text-gray-700 p-2 hover:bg-gray-100 rounded-full transition"
+                    >
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    createReviewMutation.mutate({
+                      rating: Number(reviewRating),
+                      comment: reviewComment,
+                      sportType: reviewSport || undefined,
+                    });
+                  }}
+                  className="p-6 space-y-6"
+                >
+                  <div>
+                    <label className="block text-gray-700 font-semibold mb-3 text-lg">
+                      Your Rating
+                    </label>
+                    <div className="flex items-center gap-2">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setReviewRating(star)}
+                          className={`text-3xl transition-colors ${
+                            star <= reviewRating ? 'text-yellow-500' : 'text-gray-300'
+                          } hover:text-yellow-400`}
+                        >
+                          ★
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-sm text-gray-600 mt-2">
+                      {reviewRating === 1 && "Poor"}
+                      {reviewRating === 2 && "Fair"}
+                      {reviewRating === 3 && "Good"}
+                      {reviewRating === 4 && "Very Good"}
+                      {reviewRating === 5 && "Excellent"}
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-gray-700 font-semibold mb-2">
+                      Sport Type (Optional)
+                    </label>
+                    <input
+                      value={reviewSport}
+                      onChange={(e) => setReviewSport(e.target.value)}
+                      placeholder="e.g., Football, Tennis, Badminton"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-gray-700 font-semibold mb-2">
+                      Your Experience
+                    </label>
+                    <textarea
+                      value={reviewComment}
+                      onChange={(e) => setReviewComment(e.target.value)}
+                      rows={4}
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                      placeholder="Share your experience with this venue..."
+                      required
+                    />
+                  </div>
+                  
+                  <div className="flex items-center gap-4 pt-4">
+                    <Button
+                      type="submit"
+                      disabled={createReviewMutation.isLoading}
+                      className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white py-3 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                    >
+                      {createReviewMutation.isLoading ? (
+                        <div className="flex items-center gap-2">
+                          <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Submitting...
+                        </div>
+                      ) : (
+                        "Submit Review"
+                      )}
+                    </Button>
+                    <button
+                      type="button"
+                      onClick={() => setIsReviewOpen(false)}
+                      className="px-6 py-3 text-lg font-semibold rounded-xl border-2 border-gray-300 text-gray-700 hover:bg-gray-50 transition"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                  
+                  {createReviewMutation.isError && (
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700">
+                      Failed to submit review. Please try again.
+                    </div>
+                  )}
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
