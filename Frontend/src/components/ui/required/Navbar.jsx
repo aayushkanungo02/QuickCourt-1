@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
 import { CalendarDays, LogOut } from "lucide-react";
-import useAuthUser from "../../../hooks/useAuthuser";
+import useAuthUser from "../../../hooks/useAuthuser.js";
 import { axiosInstance } from "../../../lib/axios";
 import { useNavigate } from "react-router-dom";
 
-export function Navbar() {
-  const { authUser } = useAuthUser();
+export const Navbar = () => {
+  const { authUser, isLoading } = useAuthUser();
   const isAuthenticated = Boolean(authUser);
   const navigate = useNavigate();
 
@@ -18,6 +18,23 @@ export function Navbar() {
       console.error("Logout failed", err);
     }
   };
+
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <nav className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-green-900 via-green-800 to-green-900 shadow-lg">
+        <div className="flex items-center space-x-2">
+          <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-lg">🏸</span>
+          </div>
+          <div className="text-2xl font-bold text-green-300">QuickCourt</div>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="h-9 w-9 bg-green-600 rounded-full animate-pulse"></div>
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <nav className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-green-900 via-green-800 to-green-900 shadow-lg">

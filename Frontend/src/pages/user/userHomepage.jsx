@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Navbar from "@/components/ui/required/Navbar";
+import { Navbar } from "@/components/ui/required/Navbar";
 import { Hero } from "@/components/ui/required/Hero";
 import { VenuesList } from "@/components/ui/required/VenuesList";
 import { PopularSports } from "@/components/ui/required/PopularSports";

@@ -20,7 +20,8 @@ export function VenuesList({ searchCity, onClearSearch }) {
   // Filter venues by city if searchCity is provided
   const filteredVenues = searchCity 
     ? venues.filter(venue => {
-        const venueCity = venue.location?.city || venue.location || "";
+        // Backend returns location as city string, not as an object
+        const venueCity = venue.location || "";
         return venueCity.toLowerCase().includes(searchCity.toLowerCase());
       })
     : venues;
