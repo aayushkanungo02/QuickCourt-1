@@ -1,7 +1,21 @@
+import dotenv from "dotenv";
+import { dirname, resolve } from "path";
+import { fileURLToPath } from "url";
+// Load env from default CWD, Backend/.env, and project root .env for robustness
+dotenv.config();
+try {
+  const __dirname = dirname(fileURLToPath(import.meta.url));
+  // Backend root .env
+  dotenv.config({ path: resolve(__dirname, "../..", ".env") });
+  // Project root .env
+  dotenv.config({ path: resolve(__dirname, "../../..", ".env") });
+} catch {}
 import User from "../models/userschema.js";
 import bcrypt from "bcryptjs";
 import sendEmail from "../utils/sendEmail.js";
 import generateToken from "../utils/generateToken.js";
+import jwt from "jsonwebtoken";
+
 
 const generateOTP = () =>
   Math.floor(100000 + Math.random() * 900000).toString();
@@ -125,6 +139,54 @@ export const logout = async (req, res, next) => {
   try {
     res.clearCookie("token");
     res.json({ success: true, message: "Logged out successfully" });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Admin login using .env credentials; issues separate admin cookie
+export const adminLogin = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) {
+      return res
+        .status(500)
+        .json({ message: "Server misconfiguration: admin creds missing" });
+    }
+
+    if (
+      email !== process.env.ADMIN_EMAIL ||
+      password !== process.env.ADMIN_PASSWORD
+    ) {
+      return res.status(401).json({ message: "Invalid admin credentials" });
+    }
+
+    const token = jwt.sign(
+      { role: "Admin" },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || "5d" }
+    );
+
+    if (res.cookie) {
+      res.cookie("admin_token", token, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 5 * 24 * 60 * 60 * 1000,
+      });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const adminLogout = async (req, res, next) => {
+  try {
+    res.clearCookie("admin_token");
+    res.json({ success: true });
   } catch (err) {
     next(err);
   }
