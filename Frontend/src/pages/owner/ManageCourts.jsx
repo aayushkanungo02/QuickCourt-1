@@ -533,7 +533,7 @@ export default function ManageCourts() {
               💰
             </div>
             <div>
-              <div className="text-sm text-gray-500">Total Revenue</div>
+              <div className="text-sm text-gray-500">Expected Total Revenue</div>
               <div className="text-2xl font-semibold text-gray-900">
                 {courtsLoading ? "—" : `₹${totalRevenue.toLocaleString()}`}
               </div>
