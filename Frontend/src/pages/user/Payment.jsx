@@ -34,9 +34,8 @@ function PaymentForm() {
     if (typeof bookingDetails.totalAmount === "number")
       return bookingDetails.totalAmount;
     const hours = Number(bookingDetails?.duration) || 0;
-    const pricePerHour = Number(
-      bookingDetails?.pricePerHour ?? venue?.startingPrice
-    ) || 0;
+    const pricePerHour =
+      Number(bookingDetails?.pricePerHour ?? venue?.startingPrice) || 0;
     return hours * pricePerHour;
   }, [bookingDetails, venue?.startingPrice]);
 
