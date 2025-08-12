@@ -13,7 +13,7 @@ const paymentSchema = new mongoose.Schema(
     },
     // Stripe fields
     stripePaymentIntentId: { type: String, unique: true, sparse: true },
-    // Razorpay fields
+    // Razorpay fields --> Not able to integrate due to documentation issues
     razorpayOrderId: { type: String },
     razorpayPaymentId: { type: String },
     razorpaySignature: { type: String },
