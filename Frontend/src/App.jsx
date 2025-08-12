@@ -14,6 +14,12 @@ import OwnerLayout from "./pages/owner/OwnerLayout";
 import OwnerDashboard from "./pages/owner/OwnerDashboard";
 import Facilities from "./pages/owner/Facilities";
 import ManageCourts from "./pages/owner/ManageCourts";
+import AdminLayout from "./pages/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminFacilities from "./pages/admin/AdminFacilities";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminLogin from "./pages/admin/AdminLogin";
+import { axiosInstance } from "./lib/axios";
 
 // Protected Route Component
 const ProtectedRoute = ({ children, isAuthenticated }) => {
@@ -42,6 +48,33 @@ const App = () => {
   // Check if user is authenticated
   const isAuthenticated = Boolean(authUser);
 
+  // Admin auth checker
+  const AdminRoute = ({ children }) => {
+    const [allowed, setAllowed] = React.useState(null);
+    React.useEffect(() => {
+      let mounted = true;
+      axiosInstance
+        .get("/auth/admin/me", { withCredentials: true })
+        .then(() => mounted && setAllowed(true))
+        .catch(() => mounted && setAllowed(false));
+      return () => {
+        mounted = false;
+      };
+    }, []);
+    if (allowed === null) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading...</p>
+          </div>
+        </div>
+      );
+    }
+    if (!allowed) return <Navigate to="/admin/login" replace />;
+    return children;
+  };
+
   return (
     <Routes>
       {/* Public Routes - No authentication required */}
@@ -51,6 +84,7 @@ const App = () => {
       <Route path="/" element={<UserHomePage />} />
       <Route path="/more-options" element={<MoreOptions />} />
       <Route path="/venue/:id" element={<VenueDetail />} />
+      <Route path="/admin/login" element={<AdminLogin />} />
       
       {/* Protected Routes - Authentication required */}
       <Route 
@@ -90,6 +124,20 @@ const App = () => {
         <Route index element={<OwnerDashboard />} />
         <Route path="facilities" element={<Facilities />} />
         <Route path="manage-courts" element={<ManageCourts />} />
+      </Route>
+
+      {/* Admin area */}
+      <Route
+        path="/admin"
+        element={
+          <AdminRoute>
+            <AdminLayout />
+          </AdminRoute>
+        }
+      >
+        <Route index element={<AdminDashboard />} />
+        <Route path="facilities" element={<AdminFacilities />} />
+        <Route path="users" element={<AdminUsers />} />
       </Route>
     </Routes>
   );

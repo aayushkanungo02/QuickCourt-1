@@ -23,6 +23,7 @@ export default function Signup() {
   });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const openAdmin = () => navigate("/admin/login");
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -151,6 +152,12 @@ export default function Signup() {
               Log in
             </Link>
           </p>
+
+          <div className="pt-2">
+            <button type="button" onClick={openAdmin} className="w-full text-sm text-gray-700 underline">
+              Login as Admin
+            </button>
+          </div>
         </form>
       </div>
     </div>

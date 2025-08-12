@@ -10,6 +10,7 @@ export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const openAdmin = () => navigate("/admin/login");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -105,6 +106,12 @@ export default function Login() {
               Sign Up
             </Link>
           </p>
+
+          <div className="pt-2">
+            <button type="button" onClick={openAdmin} className="w-full text-sm text-gray-700 underline">
+              Login as Admin
+            </button>
+          </div>
         </form>
       </div>
     </div>

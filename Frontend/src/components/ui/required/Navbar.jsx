@@ -4,7 +4,7 @@ import useAuthUser from "../../../hooks/useAuthuser.js";
 import { axiosInstance } from "../../../lib/axios";
 import { useNavigate } from "react-router-dom";
 
-export const Navbar = () => {
+export function Navbar() {
   const { authUser, isLoading } = useAuthUser();
   const isAuthenticated = Boolean(authUser);
   const navigate = useNavigate();
